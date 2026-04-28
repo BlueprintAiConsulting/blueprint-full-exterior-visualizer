@@ -39,7 +39,7 @@ import { API_BASE } from './utils/apiConfig';
 // ---------------------------------------------------------------------------
 const SIDING_ENABLED = true;
 const LEAD_CAPTURE_ENABLED = true;
-const ADVANCED_ENABLED = true; // Advanced Mode enabled for siding
+const ADVANCED_ENABLED = false; // Disabled — perfecting Quick Mode first
 
 
 
