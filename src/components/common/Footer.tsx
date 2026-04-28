@@ -21,7 +21,6 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
             <p className="text-[11px] text-[#64748B] leading-relaxed max-w-xs mb-4">
               AI-powered exterior visualization. Preview roofing, siding, gutters, and accents on your home using real product colors.
             </p>
-            </div>
           </div>
 
           {/* Capabilities */}
@@ -29,9 +28,9 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#64748B] mb-4">Capabilities</h3>
             <ul className="space-y-2 text-[11px] text-[#94A3B8] font-medium">
               <li>Roofing Visualization</li>
-              <li>Siding & Accents</li>
+              <li>Siding &amp; Accents</li>
               <li>AI Image Enhancement</li>
-              <li>Before & After Comparison</li>
+              <li>Before &amp; After Comparison</li>
               <li>Metal Roofing Preview</li>
             </ul>
           </div>
