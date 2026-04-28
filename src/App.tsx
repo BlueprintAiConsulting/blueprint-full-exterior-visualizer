@@ -381,7 +381,7 @@ const App: React.FC = () => {
                       <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">01</div>
                       <div className="text-left">
                         <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Roofing</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">Shingle Collections</p>
+                        <p className="text-[9px] text-[#64748B] mt-0.5">Shingles & Metal</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ const App: React.FC = () => {
                       <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">02</div>
                       <div className="text-left">
                         <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Siding</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">Siding Collections</p>
+                        <p className="text-[9px] text-[#64748B] mt-0.5">Lap · Board & Batten · Shake</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ const App: React.FC = () => {
                       <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">03</div>
                       <div className="text-left">
                         <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Accents</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">Shutters &amp; Trim — standard paint colors</p>
+                        <p className="text-[9px] text-[#64748B] mt-0.5">Trim & Shutters</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

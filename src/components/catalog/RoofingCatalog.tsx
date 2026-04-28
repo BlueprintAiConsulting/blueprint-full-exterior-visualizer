@@ -18,18 +18,15 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
   onColorMouseEnter,
   onColorMouseLeave,
 }) => {
-  // Single roof zone — always the first (and only) entry
   const zone = quickRoofZones[0];
   if (!zone) return null;
 
-  const palette = zone.selectedLine.colors;
-
   return (
     <div className="bg-[#111827] p-4 space-y-3">
-      {/* Tier picker */}
-      <div className="grid grid-cols-4 gap-1.5 bg-[#060B18] p-1 rounded-lg">
+      {/* 3-column tier picker */}
+      <div className="grid grid-cols-3 gap-1.5 bg-[#060B18] p-1 rounded-lg">
         {ROOFING_OPTIONS.map((line) => {
-          const isSelectedTier = zone.selectedLine.tier === line.tier;
+          const isSelected = zone.selectedLine.tier === line.tier;
           return (
             <button
               key={line.tier}
@@ -42,8 +39,8 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
                   )
                 )
               }
-              className={`py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all duration-150 ${
-                isSelectedTier
+              className={`py-2.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all duration-150 ${
+                isSelected
                   ? 'bg-[#1E3A8A] text-[#60A5FA] shadow-md shadow-blue-500/10'
                   : 'text-[#64748B] hover:text-[#94A3B8] hover:bg-[#111827]'
               }`}
@@ -54,7 +51,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
         })}
       </div>
 
-      {/* Product info card */}
+      {/* Product info */}
       <div className="bg-[#060B18] rounded-lg p-3 border border-[#1E293B]">
         <p className="text-[11px] font-bold text-[#E2E8F0]">
           {zone.selectedLine.line}
@@ -69,7 +66,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
 
       {/* Color grid */}
       <ColorGrid
-        colors={palette}
+        colors={zone.selectedLine.colors}
         selectedColorId={zone.selectedColor.id}
         onSelect={(c) =>
           setQuickRoofZones((prev) =>
