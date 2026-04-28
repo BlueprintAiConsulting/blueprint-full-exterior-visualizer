@@ -7,7 +7,8 @@ import {
 // Types & Constants
 import { Section, SidingLine, SidingColor, QuickZone, QuickRoofZone } from './types';
 import { 
-  SIDING_OPTIONS, DEFAULT_QUICK_ZONES, DEFAULT_QUICK_ROOF_ZONES, SECTION_COLORS
+  SIDING_OPTIONS, DEFAULT_QUICK_ZONES, DEFAULT_QUICK_ROOF_ZONES, SECTION_COLORS,
+  SHUTTER_COLORS, TRIM_COLORS
 } from './constants/catalog';
 
 // Components
@@ -403,7 +404,7 @@ const App: React.FC = () => {
                   )}
                 </div>
 
-                {/* --- SIDING SECTION (disabled — SIDING_ENABLED=false) --- */}
+                {/* --- SIDING SECTION --- */}
                 {SIDING_ENABLED && (
                 <div className="rounded-xl border border-[#1E293B] overflow-hidden">
                   <button
@@ -438,6 +439,77 @@ const App: React.FC = () => {
                 </div>
                 )}
 
+                {/* --- ACCENTS SECTION (Trim & Shutters) --- */}
+                {SIDING_ENABLED && (
+                <div className="rounded-xl border border-[#1E293B] overflow-hidden">
+                  <button
+                    onClick={() => togglePanel('accents')}
+                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[#111827] hover:bg-[#0F172A] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">03</div>
+                      <div className="text-left">
+                        <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Accents</h2>
+                        <p className="text-[9px] text-[#64748B] mt-0.5">Shutters &amp; Trim — standard paint colors</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${collapsedPanels.has('accents') ? '' : 'rotate-180'}`} />
+                    </div>
+                  </button>
+                  {!collapsedPanels.has('accents') && (
+                    <div className="border-t border-[#1E293B] bg-[#111827] p-4 space-y-2">
+                      {quickZones.filter(z => ['qz-shutters', 'qz-trim'].includes(z.id)).map((zone) => {
+                        const palette = zone.id === 'qz-shutters' ? SHUTTER_COLORS : TRIM_COLORS;
+                        const paletteLabel = zone.id === 'qz-shutters' ? 'Shutter Colors' : 'Trim Colors';
+                        const isExpanded = expandedZoneId === zone.id;
+                        
+                        return (
+                          <div key={zone.id} className={`rounded-lg border overflow-hidden transition-all ${zone.enabled ? 'border-[#334155] bg-[#0F172A]' : 'border-[#1E293B] bg-[#0A0E17]'}`}>
+                            <div className="flex items-center gap-3 p-3">
+                              <button
+                                onClick={() => setQuickZones(prev => prev.map(z => z.id === zone.id ? { ...z, enabled: !z.enabled } : z))}
+                                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${zone.enabled ? 'bg-[#3B82F6]' : 'bg-[#1E293B] border border-[#334155]'}`}
+                              >
+                                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${zone.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                              </button>
+                              <span className={`text-xs font-bold flex-1 transition-colors ${zone.enabled ? 'text-[#E2E8F0]' : 'text-[#475569]'}`}>{zone.name}</span>
+                              {zone.enabled && (
+                                <button onClick={() => setExpandedZoneId(isExpanded ? null : zone.id)} className="flex items-center gap-1.5 group">
+                                  <div className="w-4 h-4 rounded-sm border border-white/20 shrink-0" style={{ backgroundColor: zone.selectedColor.hex }} />
+                                  <span className="text-[9px] text-[#94A3B8] group-hover:text-[#E2E8F0] truncate max-w-[72px] transition-colors">{zone.selectedColor.name}</span>
+                                  <ChevronDown className={`w-3 h-3 text-[#64748B] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                              )}
+                            </div>
+                            {zone.enabled && isExpanded && (
+                              <div className="border-t border-[#1E293B] bg-[#0A0E17]/80 p-3">
+                                <p className="text-[9px] text-[#64748B] font-bold uppercase tracking-widest mb-2">{paletteLabel}</p>
+                                <div className="grid grid-cols-6 gap-2">
+                                  {palette.map((c) => (
+                                    <button
+                                      key={c.id}
+                                      onClick={() => setQuickZones(prev => prev.map(z => z.id === zone.id ? { ...z, selectedColor: c as any } : z))}
+                                      onMouseEnter={() => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(null); }}
+                                      onMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); }}
+                                      className={`aspect-square rounded-md border-2 transition-all hover:scale-110 ${
+                                        zone.selectedColor.id === c.id ? 'border-[#3B82F6] ring-1 ring-[#3B82F6] scale-110' : 'border-transparent hover:border-[#64748B]'
+                                      }`}
+                                      style={{ backgroundColor: c.hex }}
+                                      title={c.name}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                )}
+
                 {/* --- RENDER PROGRESS --- */}
                 {renderPhase !== 'idle' && (
                   <div className="bg-[#0A0E17] rounded-xl border border-[#1E293B] p-4">
@@ -446,7 +518,7 @@ const App: React.FC = () => {
                         ? <span className="text-[#10B981] text-xs">✓</span>
                         : <Loader2 className="w-3.5 h-3.5 text-[#3B82F6] animate-spin" />}
                       <span className={`text-[10px] font-bold uppercase tracking-widest ${renderPhase === 'done' ? 'text-[#10B981]' : 'text-[#60A5FA]'}`}>
-                        {renderPhase === 'done' ? '✦ Roof visualization complete' : 'Rendering roof visualization…'}
+                        {renderPhase === 'done' ? '✦ Visualization complete' : renderPhase === 'roof' ? 'Rendering roof…' : 'Rendering siding…'}
                       </span>
                     </div>
                   </div>
@@ -512,10 +584,10 @@ const App: React.FC = () => {
                 className={`flex-1 py-3.5 sm:py-4 min-h-[52px] rounded-lg font-bold text-white shadow-lg flex items-center justify-center gap-2 sm:gap-3 transition-all uppercase tracking-wider text-[10px] sm:text-[11px] active:scale-[0.97] ${ai.isQuickGenerating || ai.isProcessing || !selectedImage ? 'bg-[#1E293B] text-[#64748B] cursor-not-allowed border border-[#334155]' : (quickResult || resultImage) ? 'bg-[#1D4ED8] hover:bg-[#1E3A8A] text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' : 'bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-[0_0_20px_rgba(59,130,246,0.35)]'}`}
               >
                 {ai.isQuickGenerating || ai.isProcessing 
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Rendering Roof...</>
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Rendering…</>
                   : (quickResult || resultImage) 
                     ? <><Sparkles className="w-4 h-4" /> Re-Generate</> 
-                    : <><Home className="w-4 h-4" /> Visualize New Roof</>}
+                    : <><Home className="w-4 h-4" /> Visualize Exterior</>}
               </button>
             </div>
           </div>

@@ -26,12 +26,10 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* 02 SIDING — applied to all exterior walls & gables */}
+      {/* Main siding body — texture preview + color grid */}
       <div className="bg-[#111827] rounded-xl border border-[#1E293B] p-5 shadow-lg">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 bg-[#1E3A8A] text-[#60A5FA] rounded flex items-center justify-center text-xs font-bold">02</div>
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-[#94A3B8]">Siding</h2>
             <p className="text-[10px] text-[#64748B]">Applied to all exterior walls &amp; gables</p>
           </div>
         </div>
@@ -51,6 +49,21 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
               <p className="text-[8px] text-[#64748B] mt-0.5">{mainZone.selectedLine.colors.length} colors available</p>
             </div>
           </div>
+        </div>
+
+        {/* Siding tier tabs */}
+        <div className="flex gap-1 mb-3">
+          {SIDING_OPTIONS.map(line => (
+            <button 
+              key={line.line}
+              onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-main' ? { ...z, selectedLine: line, selectedColor: line.colors[0] } : z))}
+              className={`flex-1 py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                mainZone.selectedLine.line === line.line ? 'bg-[#1E3A8A] text-[#60A5FA]' : 'bg-[#1E293B] text-[#64748B] hover:text-[#94A3B8]'
+              }`}
+            >
+              {line.tier}
+            </button>
+          ))}
         </div>
 
         <ColorGrid 
@@ -118,58 +131,6 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
               />
             </div>
           )}
-        </div>
-      </div>
-
-      {/* 03 ACCENTS — Shutters & Trim with dedicated standard palettes */}
-      <div className="bg-[#111827] rounded-xl border border-[#1E293B] p-5 shadow-lg">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 bg-[#1E3A8A] text-[#60A5FA] rounded flex items-center justify-center text-xs font-bold">03</div>
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-[#94A3B8]">Accents</h2>
-            <p className="text-[10px] text-[#64748B]">Shutters & trim — standard paint colors</p>
-          </div>
-        </div>
-        <div className="space-y-2">
-          {quickZones.filter(z => ['qz-shutters', 'qz-trim'].includes(z.id)).map((zone) => {
-            const palette = zone.id === 'qz-shutters' ? SHUTTER_COLORS : TRIM_COLORS;
-            const paletteLabel = zone.id === 'qz-shutters' ? 'Shutter Colors' : 'Trim Colors';
-            const isExpanded = expandedZoneId === zone.id;
-            
-            return (
-              <div key={zone.id} className={`rounded-lg border overflow-hidden transition-all ${zone.enabled ? 'border-[#334155] bg-[#0F172A]' : 'border-[#1E293B] bg-[#0A0E17]'}`}>
-                <div className="flex items-center gap-3 p-3">
-                  <button
-                    onClick={() => setQuickZones(prev => prev.map(z => z.id === zone.id ? { ...z, enabled: !z.enabled } : z))}
-                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${zone.enabled ? 'bg-[#3B82F6]' : 'bg-[#1E293B] border border-[#334155]'}`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${zone.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                  </button>
-                  <span className={`text-xs font-bold flex-1 transition-colors ${zone.enabled ? 'text-[#E2E8F0]' : 'text-[#475569]'}`}>{zone.name}</span>
-                  {zone.enabled && (
-                    <button onClick={() => setExpandedZoneId(isExpanded ? null : zone.id)} className="flex items-center gap-1.5 group">
-                      <div className="w-4 h-4 rounded-sm border border-white/20 shrink-0" style={{ backgroundColor: zone.selectedColor.hex }} />
-                      <span className="text-[9px] text-[#94A3B8] group-hover:text-[#E2E8F0] truncate max-w-[72px] transition-colors">{zone.selectedColor.name}</span>
-                      <ChevronDown className={`w-3 h-3 text-[#64748B] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                    </button>
-                  )}
-                </div>
-                {zone.enabled && isExpanded && (
-                  <div className="border-t border-[#1E293B] bg-[#0A0E17]/80 p-3">
-                    <p className="text-[9px] text-[#64748B] font-bold uppercase tracking-widest mb-2">{paletteLabel}</p>
-                    <ColorGrid 
-                      colors={palette}
-                      selectedColorId={zone.selectedColor.id}
-                      onSelect={(c) => setQuickZones(prev => prev.map(z => z.id === zone.id ? { ...z, selectedColor: c as any } : z))}
-                      onMouseEnter={onColorMouseEnter}
-                      onMouseLeave={onColorMouseLeave}
-                      isExpanded={true} // Always expanded in this sub-menu
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
