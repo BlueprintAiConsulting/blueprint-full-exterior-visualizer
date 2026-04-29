@@ -31,7 +31,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   showMoreLabel = 'Show all colors',
   showFewerLabel = 'Show fewer',
 }) => {
-  const PREVIEW_COUNT = 12;
+  const PREVIEW_COUNT = 8;
   const selectedColor = colors.find(c => c.id === selectedColorId);
   const visibleColors = isExpanded ? colors : colors.slice(0, PREVIEW_COUNT);
 

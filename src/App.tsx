@@ -90,7 +90,7 @@ const App: React.FC = () => {
   // --- PIPELINE STATE ---
   const [renderPhase, setRenderPhase] = useState<'idle' | 'roof' | 'siding' | 'done'>('idle');
   const [roofPassResult, setRoofPassResult] = useState<string | null>(null);
-  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set());
+  const [activePanel, setActivePanel] = useState<string | null>('roof');
 
   // --- REFS ---
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -180,11 +180,7 @@ const App: React.FC = () => {
   };
 
   const togglePanel = (panel: string) => {
-    setCollapsedPanels(prev => {
-      const next = new Set(prev);
-      if (next.has(panel)) next.delete(panel); else next.add(panel);
-      return next;
-    });
+    setActivePanel(prev => prev === panel ? null : panel);
   };
 
   const hasRoofChanges = quickRoofZones.some(z => z.enabled || z.id === 'rz-main');
@@ -372,25 +368,31 @@ const App: React.FC = () => {
             {appMode === 'quick' ? (
               <div className="space-y-4">
                 {/* --- ROOFING SECTION --- */}
-                <div className="rounded-xl border border-[#1E293B] overflow-hidden">
+                <div className={`rounded-xl border overflow-hidden transition-colors ${activePanel === 'roof' ? 'border-[#334155]' : 'border-[#1E293B]'}`}>
                   <button
                     onClick={() => togglePanel('roof')}
-                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[#111827] hover:bg-[#0F172A] transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-[#111827] hover:bg-[#0F172A] transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">01</div>
-                      <div className="text-left">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Roofing</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">Shingles & Metal</p>
-                      </div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-6 h-6 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[9px] font-bold shrink-0">01</div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Roofing</h2>
+                      {/* Collapsed summary — show selected color chip */}
+                      {activePanel !== 'roof' && (
+                        <div className="flex items-center gap-2 ml-1">
+                          <div className="w-4 h-4 rounded-sm border border-white/15 shrink-0" style={{ backgroundColor: quickRoofZones[0]?.selectedColor.hex }} />
+                          <span className="text-[10px] text-[#94A3B8] truncate max-w-[100px]">
+                            {quickRoofZones[0]?.selectedColor.name} · {quickRoofZones[0]?.selectedLine.tier}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {renderPhase === 'roof' && <div className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" />}
                       {renderPhase === 'done' && hasRoofChanges && <span className="text-[9px] text-[#10B981] font-bold">✓</span>}
-                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${collapsedPanels.has('roof') ? '' : 'rotate-180'}`} />
+                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${activePanel === 'roof' ? 'rotate-180' : ''}`} />
                     </div>
                   </button>
-                  {!collapsedPanels.has('roof') && (
+                  {activePanel === 'roof' && (
                     <div className="border-t border-[#1E293B]">
                       <RoofingCatalog 
                         quickRoofZones={quickRoofZones}
@@ -406,25 +408,34 @@ const App: React.FC = () => {
 
                 {/* --- SIDING SECTION --- */}
                 {SIDING_ENABLED && (
-                <div className="rounded-xl border border-[#1E293B] overflow-hidden">
+                <div className={`rounded-xl border overflow-hidden transition-colors ${activePanel === 'siding' ? 'border-[#334155]' : 'border-[#1E293B]'}`}>
                   <button
                     onClick={() => togglePanel('siding')}
-                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[#111827] hover:bg-[#0F172A] transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-[#111827] hover:bg-[#0F172A] transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">02</div>
-                      <div className="text-left">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Siding</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">Lap · Vertical Panel · Shingle</p>
-                      </div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-6 h-6 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[9px] font-bold shrink-0">02</div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Siding</h2>
+                      {/* Collapsed summary */}
+                      {activePanel !== 'siding' && (() => {
+                        const mainZ = quickZones.find(z => z.id === 'qz-main');
+                        return mainZ ? (
+                          <div className="flex items-center gap-2 ml-1">
+                            <div className="w-4 h-4 rounded-sm border border-white/15 shrink-0" style={{ backgroundColor: mainZ.selectedColor.hex }} />
+                            <span className="text-[10px] text-[#94A3B8] truncate max-w-[100px]">
+                              {mainZ.selectedColor.name} · {mainZ.selectedLine.tier}
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {renderPhase === 'siding' && <div className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" />}
                       {renderPhase === 'done' && hasSidingChanges && <span className="text-[9px] text-[#10B981] font-bold">✓</span>}
-                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${collapsedPanels.has('siding') ? '' : 'rotate-180'}`} />
+                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${activePanel === 'siding' ? 'rotate-180' : ''}`} />
                     </div>
                   </button>
-                  {!collapsedPanels.has('siding') && (
+                  {activePanel === 'siding' && (
                     <div className="border-t border-[#1E293B]">
                       <SidingCatalog 
                         quickZones={quickZones}
@@ -441,23 +452,36 @@ const App: React.FC = () => {
 
                 {/* --- ACCENTS SECTION (Trim & Shutters) --- */}
                 {SIDING_ENABLED && (
-                <div className="rounded-xl border border-[#1E293B] overflow-hidden">
+                <div className={`rounded-xl border overflow-hidden transition-colors ${activePanel === 'accents' ? 'border-[#334155]' : 'border-[#1E293B]'}`}>
                   <button
                     onClick={() => togglePanel('accents')}
-                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[#111827] hover:bg-[#0F172A] transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-[#111827] hover:bg-[#0F172A] transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">03</div>
-                      <div className="text-left">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Accents</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">Trim & Shutters</p>
-                      </div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-6 h-6 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[9px] font-bold shrink-0">03</div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Accents</h2>
+                      {/* Collapsed summary */}
+                      {activePanel !== 'accents' && (() => {
+                        const trimZ = quickZones.find(z => z.id === 'qz-trim');
+                        const shutterZ = quickZones.find(z => z.id === 'qz-shutters');
+                        return (
+                          <div className="flex items-center gap-1.5 ml-1">
+                            {trimZ && trimZ.enabled && (
+                              <div className="w-4 h-4 rounded-sm border border-white/15 shrink-0" style={{ backgroundColor: trimZ.selectedColor.hex }} title={`Trim: ${trimZ.selectedColor.name}`} />
+                            )}
+                            {shutterZ && shutterZ.enabled && (
+                              <div className="w-4 h-4 rounded-sm border border-white/15 shrink-0" style={{ backgroundColor: shutterZ.selectedColor.hex }} title={`Shutters: ${shutterZ.selectedColor.name}`} />
+                            )}
+                            <span className="text-[10px] text-[#94A3B8]">Trim & Shutters</span>
+                          </div>
+                        );
+                      })()}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${collapsedPanels.has('accents') ? '' : 'rotate-180'}`} />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <ChevronDown className={`w-4 h-4 text-[#64748B] transition-transform duration-200 ${activePanel === 'accents' ? 'rotate-180' : ''}`} />
                     </div>
                   </button>
-                  {!collapsedPanels.has('accents') && (
+                  {activePanel === 'accents' && (
                     <div className="border-t border-[#1E293B] bg-[#111827] p-4 space-y-2">
                       {quickZones.filter(z => ['qz-shutters', 'qz-trim'].includes(z.id)).map((zone) => {
                         const palette = zone.id === 'qz-shutters' ? SHUTTER_COLORS : TRIM_COLORS;

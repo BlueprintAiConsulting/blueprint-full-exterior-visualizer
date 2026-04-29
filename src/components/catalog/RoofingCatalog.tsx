@@ -15,6 +15,8 @@ interface RoofingCatalogProps {
 const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
   quickRoofZones,
   setQuickRoofZones,
+  expandedRoofZoneId,
+  setExpandedRoofZoneId,
   onColorMouseEnter,
   onColorMouseLeave,
 }) => {
@@ -51,17 +53,10 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
         })}
       </div>
 
-      {/* Product info */}
-      <div className="bg-[#060B18] rounded-lg p-3 border border-[#1E293B]">
-        <p className="text-[11px] font-bold text-[#E2E8F0]">
-          {zone.selectedLine.line}
-        </p>
-        <p className="text-[10px] text-[#64748B] mt-1 leading-relaxed">
-          {zone.selectedLine.profileLabel}
-        </p>
-        <p className="text-[9px] text-[#475569] mt-1.5 italic">
-          {zone.selectedLine.description}
-        </p>
+      {/* Product label — compact */}
+      <div className="flex items-baseline gap-2 px-1">
+        <p className="text-[11px] font-bold text-[#E2E8F0]">{zone.selectedLine.line}</p>
+        <p className="text-[9px] text-[#475569] italic truncate">{zone.selectedLine.profileLabel}</p>
       </div>
 
       {/* Color grid */}
@@ -77,7 +72,8 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
         }
         onMouseEnter={onColorMouseEnter}
         onMouseLeave={onColorMouseLeave}
-        isExpanded={true}
+        isExpanded={expandedRoofZoneId === zone.id}
+        onToggleExpand={() => setExpandedRoofZoneId(expandedRoofZoneId === zone.id ? null : zone.id)}
         ringColor="#3B82F6"
         textureStyle={zone.selectedLine.textureStyle}
       />

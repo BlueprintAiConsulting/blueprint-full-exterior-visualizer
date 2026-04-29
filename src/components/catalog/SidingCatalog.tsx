@@ -42,11 +42,10 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
         ))}
       </div>
 
-      {/* Product info */}
-      <div className="bg-[#060B18] rounded-lg p-3 border border-[#1E293B]">
+      {/* Product label — compact */}
+      <div className="flex items-baseline gap-2 px-1">
         <p className="text-[11px] font-bold text-[#E2E8F0]">{mainZone.selectedLine.line}</p>
-        <p className="text-[10px] text-[#64748B] mt-1 leading-relaxed">{mainZone.selectedLine.profileLabel}</p>
-        <p className="text-[9px] text-[#475569] mt-1.5 italic">{mainZone.selectedLine.description}</p>
+        <p className="text-[9px] text-[#475569] italic truncate">{mainZone.selectedLine.profileLabel}</p>
       </div>
 
       {/* Color grid */}
