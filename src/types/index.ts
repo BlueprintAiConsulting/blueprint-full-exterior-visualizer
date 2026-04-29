@@ -48,6 +48,7 @@ export interface RoofingLine {
   materialType: string;
   profileLabel: string;
   textureImage: string;
+  textureStyle: 'architectural' | 'designer' | 'metal';
   description: string;
   colors: RoofingColor[];
 }
@@ -60,7 +61,7 @@ export interface QuickRoofZone {
   selectedColor: RoofingColor;
 }
 
-export type TextureStyleKey = 'horizontal-lap' | 'dutch-lap' | 'board-batten' | 'shake';
+export type TextureStyleKey = 'horizontal-lap' | 'dutch-lap' | 'board-batten' | 'shake' | 'architectural' | 'designer' | 'metal';
 
 export interface QuickZoneData {
   name: string;

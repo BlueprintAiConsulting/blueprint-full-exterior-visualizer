@@ -151,6 +151,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     materialType: 'Architectural Shingles',
     profileLabel: 'Lifetime Laminate — Dimensional Profile',
     textureImage: '/textures/roof-architectural.png',
+    textureStyle: 'architectural',
     description: 'Industry-standard dimensional shingle — 14 colors.',
     colors: [
       { id: 'std-charcoal',         name: 'Charcoal',         hex: '#3C3C3E', hue: 'Dark near-black charcoal'  },
@@ -175,6 +176,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     materialType: 'Designer Architectural Shingles',
     profileLabel: 'High-Definition — Maximum Dimension',
     textureImage: '/textures/roof-designer.png',
+    textureStyle: 'designer',
     description: 'Premium high-contrast laminate with ultra-HD dimension — 8 colors.',
     colors: [
       { id: 'des-midnight-mesa',   name: 'Midnight Mesa',   hex: '#303032', hue: 'Deep midnight near-black'  },
@@ -193,6 +195,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     materialType: 'Standing Seam Metal Roof',
     profileLabel: 'Vertical Panel — Concealed Fastener',
     textureImage: '/textures/roof-storm.png',
+    textureStyle: 'metal',
     description: 'Premium standing seam metal roofing — 10 colors.',
     colors: [
       { id: 'mtl-matte-black',      name: 'Matte Black',      hex: '#1E1E20', hue: 'Deep matte black'        },

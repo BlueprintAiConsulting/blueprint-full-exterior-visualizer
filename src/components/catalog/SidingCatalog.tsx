@@ -59,6 +59,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
         isExpanded={expandedZoneId === 'qz-main'}
         onToggleExpand={() => setExpandedZoneId(expandedZoneId === 'qz-main' ? null : 'qz-main')}
         textureImage={mainZone.selectedLine.textureImage}
+        textureStyle={mainZone.selectedLine.textureStyle}
       />
 
       {/* Upper Gable accent zone */}
@@ -101,6 +102,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
                 isExpanded={expandedZoneId === 'qz-gable'}
                 onToggleExpand={() => setExpandedZoneId(expandedZoneId === 'qz-gable' ? null : 'qz-gable')}
                 textureImage={gableZone.selectedLine.textureImage}
+                textureStyle={gableZone.selectedLine.textureStyle}
                 ringColor="#7C3AED"
               />
             </div>

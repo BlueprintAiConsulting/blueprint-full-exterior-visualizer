@@ -1,5 +1,6 @@
 import React from 'react';
 import { SidingColor, RoofingColor } from '../../types';
+import { getTextureOverlayCSS } from '../../utils/textures';
 
 interface ColorGridProps {
   colors: (SidingColor | RoofingColor)[];
@@ -8,6 +9,8 @@ interface ColorGridProps {
   onMouseEnter?: (color: SidingColor | RoofingColor) => void;
   onMouseLeave?: () => void;
   textureImage?: string;
+  /** textureStyle key passed from the parent line (e.g. 'horizontal-lap', 'shake', 'architectural') */
+  textureStyle?: string;
   isExpanded: boolean;
   onToggleExpand?: () => void;
   ringColor?: string;
@@ -23,6 +26,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   onMouseLeave,
   isExpanded,
   onToggleExpand,
+  textureStyle,
   ringColor = '#3B82F6',
   showMoreLabel = 'Show all colors',
   showFewerLabel = 'Show fewer',
@@ -30,6 +34,9 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const PREVIEW_COUNT = 12;
   const selectedColor = colors.find(c => c.id === selectedColorId);
   const visibleColors = isExpanded ? colors : colors.slice(0, PREVIEW_COUNT);
+
+  // Pre-compute the texture overlay background-image (same for every swatch in this grid)
+  const textureBg = getTextureOverlayCSS(textureStyle);
 
   return (
     <div className="space-y-3">
@@ -40,8 +47,17 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             className="w-8 h-8 rounded-md shrink-0 border border-white/10 overflow-hidden relative"
             style={{ backgroundColor: selectedColor.hex }}
           >
-            {'swatchImage' in selectedColor && (selectedColor as any).swatchImage && (
-              <img src={(selectedColor as any).swatchImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            {/* Texture overlay on preview swatch */}
+            {textureBg && (
+              <div
+                className="absolute inset-0 rounded-md"
+                style={{
+                  backgroundImage: textureBg,
+                  backgroundSize: '80px 40px',
+                  mixBlendMode: 'multiply',
+                  opacity: 0.55,
+                }}
+              />
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -59,7 +75,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {visibleColors.map((color) => {
           const isSelected = color.id === selectedColorId;
-          const hasSwatchImg = 'swatchImage' in color && (color as any).swatchImage;
 
           return (
             <button
@@ -70,7 +85,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
               title={`${color.name} — ${color.hue}`}
               className="group flex flex-col items-center gap-1.5 focus:outline-none"
             >
-              {/* Swatch */}
+              {/* Swatch — color base + texture overlay */}
               <div
                 className="w-full aspect-square rounded-lg relative overflow-hidden transition-all duration-150"
                 style={{
@@ -80,12 +95,22 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                     : '0 0 0 1px rgba(255,255,255,0.06)',
                 }}
               >
-                {hasSwatchImg && (
-                  <img
-                    src={(color as any).swatchImage}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover"
+                {/* Material texture overlay (multiply blends with the hex color) */}
+                {textureBg && (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: textureBg,
+                      backgroundSize: textureStyle === 'board-batten' || textureStyle === 'metal'
+                        ? '48px 64px'
+                        : textureStyle === 'shake'
+                        ? '64px 48px'
+                        : textureStyle === 'designer'
+                        ? '96px 36px'
+                        : '80px 32px',
+                      mixBlendMode: 'multiply',
+                      opacity: 0.52,
+                    }}
                   />
                 )}
                 {/* Hover shine */}
