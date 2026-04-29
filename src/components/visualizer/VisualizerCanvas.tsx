@@ -78,9 +78,29 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
             exit={{ opacity: 0 }}
             className="w-full h-full p-4 flex flex-col gap-3"
           >
+            {/* Zoom toolbar for result view */}
+            <div className="absolute top-3 right-4 hidden sm:flex items-center gap-1.5 bg-[#0F172A]/90 backdrop-blur-md border border-[#334155] rounded-full px-3 py-1.5 shadow-xl z-30">
+              <button onClick={() => setZoom(Math.max(1, zoom - 0.25))} className="p-1.5 rounded-full transition-colors text-[#94A3B8] hover:text-white hover:bg-[#1E293B]"><ZoomOut className="w-4 h-4" /></button>
+              <span className="text-[10px] font-bold text-[#E2E8F0] tracking-wider w-10 text-center select-none">{Math.round(zoom * 100)}%</span>
+              <button onClick={() => setZoom(Math.min(5, zoom + 0.25))} className="p-1.5 rounded-full transition-colors text-[#94A3B8] hover:text-white hover:bg-[#1E293B]"><ZoomIn className="w-4 h-4" /></button>
+              <div className="h-4 w-[1px] bg-[#334155] mx-1" />
+              <button onClick={() => setIsPanMode(!isPanMode)} className={`p-1.5 rounded-full transition-colors ${isPanMode ? 'bg-[#3B82F6] text-white' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}><Hand className="w-4 h-4" /></button>
+              <button onClick={() => { setZoom(1); setPan({x:0, y:0}); }} className="p-1.5 rounded-full transition-colors text-[#94A3B8] hover:text-white hover:bg-[#1E293B]"><Maximize className="w-4 h-4" /></button>
+            </div>
+
             <div
-              className="relative w-full flex-1 min-h-0 rounded-lg overflow-hidden border border-[#334155] shadow-2xl bg-[#0F172A] cursor-ew-resize select-none"
+              className={`relative w-full flex-1 min-h-0 rounded-lg overflow-hidden border border-[#334155] shadow-2xl bg-[#0F172A] select-none ${isPanMode ? (isDraggingPan ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-ew-resize'}`}
+              onWheel={(e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.15 : 0.15;
+                setZoom(Math.max(1, Math.min(5, zoom + delta)));
+              }}
               onMouseDown={(e) => {
+                if (isPanMode) {
+                  onStartPan(e.clientX, e.clientY);
+                  return;
+                }
+                // Before/after slider drag
                 const rect = e.currentTarget.getBoundingClientRect();
                 const update = (cx: number) => setSliderPos(Math.max(0, Math.min(100, ((cx - rect.left) / rect.width) * 100)));
                 update(e.clientX);
@@ -88,6 +108,15 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
                 const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onUp);
+              }}
+              onMouseMove={(e) => {
+                if (isPanMode) onMovePan(e.clientX, e.clientY);
+              }}
+              onMouseUp={() => {
+                if (isPanMode) onEndPan();
+              }}
+              onMouseLeave={() => {
+                if (isPanMode) onEndPan();
               }}
               onTouchStart={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -100,8 +129,18 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
                 setSliderPos(Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100)));
               }}
             >
-              <img src={selectedImage!} alt="Before" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
-              <img src={currentResult} alt="After" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }} draggable={false} />
+              {/* Zoom/pan wrapper around both images */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
+                  transformOrigin: 'center',
+                }}
+              >
+                <img src={selectedImage!} alt="Before" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
+                <img src={currentResult} alt="After" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }} draggable={false} />
+              </div>
+              {/* Slider line + handle (not affected by zoom) */}
               <div className="absolute top-0 bottom-0 w-[2px] bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.7)] z-10 pointer-events-none" style={{ left: `${sliderPos}%` }} />
               <div className="absolute top-1/2 z-20 pointer-events-none" style={{ left: `${sliderPos}%`, transform: "translate(-50%, -50%)" }}>
                 <div className="w-10 h-10 rounded-full bg-white shadow-[0_4px_24px_rgba(0,0,0,0.5)] flex items-center justify-center ring-2 ring-black/10">
