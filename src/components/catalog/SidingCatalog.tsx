@@ -78,7 +78,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 
           {gableZone.enabled && (
             <div className="space-y-2">
-              {/* Gable style picker — only Cedar Shake and Board & Batten make sense as accents */}
+              {/* Gable style picker — only Rustic Shingle and Vertical Panel make sense as accents */}
               <div className="grid grid-cols-2 gap-1 mb-2">
                 {[SIDING_OPTIONS[1], SIDING_OPTIONS[2]].map(line => (
                   <button 

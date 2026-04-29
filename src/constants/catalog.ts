@@ -13,7 +13,7 @@ export const SECTION_COLORS: [number, number, number, number][] = [
 ];
 
 // ===========================================================================
-//  SIDING — 3 product lines (Lap, Board & Batten, Cedar Shake)
+//  SIDING — 3 product lines (Lap, Vertical Panel, Rustic Shingle)
 // ===========================================================================
 export const SIDING_OPTIONS: SidingLine[] = [
   {
@@ -52,14 +52,14 @@ export const SIDING_OPTIONS: SidingLine[] = [
     ]
   },
   {
-    tier: 'B&B',
-    line: 'Board & Batten',
-    material: 'Insulated Board & Batten Vinyl',
-    profileLabel: 'Vertical Panel — Cedar Grain Texture',
-    textureImage: '/textures/board-batten.png',
-    textureStyle: 'board-batten',
+    tier: 'Vertical',
+    line: 'Vertical Panel',
+    material: 'Insulated Vertical Vinyl Panel',
+    profileLabel: 'Vertical Panel — Woodgrain Texture',
+    textureImage: '/textures/vertical-panel.png',
+    textureStyle: 'vertical-panel',
     style: 'vertical',
-    description: 'Vertical board & batten with insulated foam backing.',
+    description: 'Vertical plank profile with insulated foam backing.',
     colors: [
       { id: 'bb-snow',            name: 'Snow',            hex: '#F2F2F0', hue: 'Crisp near-white'       },
       { id: 'bb-colonial-white',  name: 'Colonial White',  hex: '#E8E6DF', hue: 'Warm off-white'         },
@@ -76,13 +76,13 @@ export const SIDING_OPTIONS: SidingLine[] = [
     ]
   },
   {
-    tier: 'Shake',
-    line: 'Cedar Shake',
-    material: 'Polymer Shakes & Shingles',
-    profileLabel: 'Staggered Shingle — Natural Cedar Look',
-    textureImage: '/textures/cedar-shake.png',
-    textureStyle: 'shake',
-    description: 'Authentic cedar shingle look with natural texture.',
+    tier: 'Shingle',
+    line: 'Rustic Shingle',
+    material: 'Polymer Shingles',
+    profileLabel: 'Staggered Shingle — Natural Hewn Look',
+    textureImage: '/textures/rustic-shingle.png',
+    textureStyle: 'rustic-shingle',
+    description: 'Authentic staggered shingle look with natural wood texture.',
     colors: [
       { id: 'cs-colonial-white',  name: 'Colonial White',  hex: '#E8E6DF', hue: 'Warm off-white'         },
       { id: 'cs-heritage-cream',  name: 'Heritage Cream',  hex: '#EDE0BE', hue: 'Buttery cream'          },

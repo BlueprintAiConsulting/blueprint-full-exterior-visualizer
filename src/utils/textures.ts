@@ -1,9 +1,12 @@
 /**
  * textures.ts
- * Generates CSS background styles for each material texture style.
- * Uses inline SVG patterns so no external image files are required.
- * The hex color is applied as the base background; the SVG adds the
- * structural surface detail on top via mix-blend-mode in the component.
+ * High-fidelity CSS background styles for each material texture style.
+ * Uses inline SVG patterns — no external image files required.
+ * The hex color is applied as the base; the SVG adds structural surface
+ * detail via mix-blend-mode in the component.
+ *
+ * Each pattern is designed at a scale that reads clearly even at 60-80px
+ * swatch sizes — balancing realistic detail with legibility.
  */
 
 function svgUri(svg: string): string {
@@ -14,142 +17,356 @@ function svgUri(svg: string): string {
 export function getTextureOverlayCSS(style: string | undefined): string | undefined {
   switch (style) {
 
-    // ── ROOFING ──────────────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════════
+    //  ROOFING TEXTURES
+    // ════════════════════════════════════════════════════════════════════════
 
     case 'architectural': {
-      // Dimensional asphalt shingles — staggered rectangular tabs with shadow lines
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="32">
-        <rect width="80" height="32" fill="#b0b0b0"/>
-        <!-- row shadow lines -->
-        <rect x="0" y="11" width="80" height="3" fill="#6a6a6a" opacity="0.55"/>
-        <rect x="0" y="25" width="80" height="3" fill="#6a6a6a" opacity="0.55"/>
-        <!-- tab breaks row 1 -->
-        <rect x="19" y="0" width="2" height="11" fill="#555" opacity="0.4"/>
-        <rect x="51" y="0" width="2" height="11" fill="#555" opacity="0.4"/>
-        <!-- tab breaks row 2 -->
-        <rect x="5"  y="14" width="2" height="11" fill="#555" opacity="0.4"/>
-        <rect x="35" y="14" width="2" height="11" fill="#555" opacity="0.4"/>
-        <rect x="65" y="14" width="2" height="11" fill="#555" opacity="0.4"/>
-        <!-- granule noise -->
-        <filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" result="noise"/><feColorMatrix type="saturate" values="0"/><feBlend in="SourceGraphic" in2="noise" mode="multiply"/></filter>
-        <rect width="80" height="32" filter="url(#n)" opacity="0.12"/>
+      // Dimensional asphalt shingles — 3-tab stagger, granular surface,
+      // shadow exposure lines, realistic per-tab tonal variation
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="56">
+        <defs>
+          <filter id="grain">
+            <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="5" stitchTiles="stitch" result="n"/>
+            <feColorMatrix type="saturate" values="0" in="n" result="grey"/>
+            <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
+          </filter>
+          <linearGradient id="tabShade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.08"/>
+            <stop offset="0.3" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="0.8" stop-color="#000" stop-opacity="0.06"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.15"/>
+          </linearGradient>
+        </defs>
+        <!-- base fill -->
+        <rect width="120" height="56" fill="#ababab"/>
+
+        <!-- ROW 1 tabs -->
+        <rect x="0"  y="0" width="38" height="24" fill="#b0b0b0" rx="0.5"/>
+        <rect x="40" y="0" width="36" height="24" fill="#a8a8a8" rx="0.5"/>
+        <rect x="78" y="0" width="42" height="24" fill="#acacac" rx="0.5"/>
+        <!-- ROW 2 tabs (offset) -->
+        <rect x="-12" y="28" width="34" height="24" fill="#a6a6a6" rx="0.5"/>
+        <rect x="24"  y="28" width="40" height="24" fill="#b2b2b2" rx="0.5"/>
+        <rect x="66"  y="28" width="32" height="24" fill="#a9a9a9" rx="0.5"/>
+        <rect x="100" y="28" width="32" height="24" fill="#aeaeae" rx="0.5"/>
+
+        <!-- Exposure shadows between rows -->
+        <rect x="0" y="23" width="120" height="5" fill="#000" opacity="0.35"/>
+        <rect x="0" y="23" width="120" height="1.5" fill="#000" opacity="0.25"/>
+        <rect x="0" y="51" width="120" height="5" fill="#000" opacity="0.35"/>
+        <rect x="0" y="51" width="120" height="1.5" fill="#000" opacity="0.25"/>
+
+        <!-- Tab gap shadows (vertical) -->
+        <rect x="38"  y="0" width="2" height="24" fill="#666" opacity="0.35"/>
+        <rect x="78"  y="0" width="2" height="24" fill="#666" opacity="0.35"/>
+        <rect x="22"  y="28" width="2" height="24" fill="#666" opacity="0.35"/>
+        <rect x="64"  y="28" width="2" height="24" fill="#666" opacity="0.35"/>
+        <rect x="98"  y="28" width="2" height="24" fill="#666" opacity="0.35"/>
+
+        <!-- Highlight along top of each tab -->
+        <rect x="0"  y="0"  width="120" height="1" fill="#fff" opacity="0.12"/>
+        <rect x="0"  y="28" width="120" height="1" fill="#fff" opacity="0.12"/>
+
+        <!-- Tab depth gradient -->
+        <rect x="0" y="0"  width="120" height="24" fill="url(#tabShade)"/>
+        <rect x="0" y="28" width="120" height="24" fill="url(#tabShade)"/>
+
+        <!-- Granule noise -->
+        <rect width="120" height="56" filter="url(#grain)" opacity="0.10"/>
       </svg>`;
       return svgUri(svg);
     }
 
     case 'designer': {
-      // HD designer shingles — deeper shadow, more irregular tab widths
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="36">
-        <rect width="96" height="36" fill="#a8a8a8"/>
-        <rect x="0" y="13" width="96" height="4" fill="#505050" opacity="0.65"/>
-        <rect x="0" y="29" width="96" height="4" fill="#505050" opacity="0.65"/>
-        <!-- row 1 tab breaks — irregular widths -->
-        <rect x="22" y="0" width="3" height="13" fill="#444" opacity="0.45"/>
-        <rect x="58" y="0" width="2" height="13" fill="#444" opacity="0.45"/>
-        <!-- row 2 -->
-        <rect x="10" y="17" width="2" height="12" fill="#444" opacity="0.45"/>
-        <rect x="44" y="17" width="3" height="12" fill="#444" opacity="0.45"/>
-        <rect x="76" y="17" width="2" height="12" fill="#444" opacity="0.45"/>
-        <!-- highlight lip -->
-        <rect x="0" y="11" width="96" height="1.5" fill="#fff" opacity="0.18"/>
-        <rect x="0" y="27" width="96" height="1.5" fill="#fff" opacity="0.18"/>
-        <filter id="n2"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" result="noise"/><feColorMatrix type="saturate" values="0"/><feBlend in="SourceGraphic" in2="noise" mode="multiply"/></filter>
-        <rect width="96" height="36" filter="url(#n2)" opacity="0.15"/>
+      // HD designer shingles — thicker laminate, deeper shadow bands,
+      // pronounced tonal variation between tabs, more visible offset
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="64">
+        <defs>
+          <filter id="dgrain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="6" stitchTiles="stitch" result="n"/>
+            <feColorMatrix type="saturate" values="0" in="n" result="grey"/>
+            <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
+          </filter>
+          <linearGradient id="dShade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.1"/>
+            <stop offset="0.25" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="0.7" stop-color="#000" stop-opacity="0.05"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.18"/>
+          </linearGradient>
+        </defs>
+        <rect width="120" height="64" fill="#a0a0a0"/>
+
+        <!-- ROW 1 — variable tab widths for "high-definition" look -->
+        <rect x="0"  y="0" width="28" height="27" fill="#a8a8a8"/>
+        <rect x="30" y="0" width="42" height="27" fill="#9a9a9a"/>
+        <rect x="74" y="0" width="46" height="27" fill="#a4a4a4"/>
+        <!-- ROW 2 — half offset -->
+        <rect x="-8"  y="33" width="36" height="27" fill="#9e9e9e"/>
+        <rect x="30"  y="33" width="38" height="27" fill="#a6a6a6"/>
+        <rect x="70"  y="33" width="30" height="27" fill="#989898"/>
+        <rect x="102" y="33" width="26" height="27" fill="#a2a2a2"/>
+
+        <!-- Deep exposure shadows -->
+        <rect x="0" y="25" width="120" height="8" fill="#000" opacity="0.40"/>
+        <rect x="0" y="25" width="120" height="2" fill="#000" opacity="0.30"/>
+        <rect x="0" y="58" width="120" height="6" fill="#000" opacity="0.40"/>
+        <rect x="0" y="58" width="120" height="2" fill="#000" opacity="0.30"/>
+
+        <!-- Highlight lip — the hallmark of designer shingles -->
+        <rect x="0" y="25" width="120" height="1" fill="#fff" opacity="0.20"/>
+        <rect x="0" y="58" width="120" height="1" fill="#fff" opacity="0.20"/>
+        <rect x="0" y="0"  width="120" height="0.8" fill="#fff" opacity="0.10"/>
+        <rect x="0" y="33" width="120" height="0.8" fill="#fff" opacity="0.10"/>
+
+        <!-- Tab gap shadows -->
+        <rect x="28"  y="0" width="2" height="27" fill="#555" opacity="0.40"/>
+        <rect x="72"  y="0" width="2" height="27" fill="#555" opacity="0.40"/>
+        <rect x="28"  y="33" width="2" height="27" fill="#555" opacity="0.40"/>
+        <rect x="68"  y="33" width="2" height="27" fill="#555" opacity="0.40"/>
+        <rect x="100" y="33" width="2" height="27" fill="#555" opacity="0.40"/>
+
+        <!-- Tab depth gradient -->
+        <rect x="0" y="0"  width="120" height="27" fill="url(#dShade)"/>
+        <rect x="0" y="33" width="120" height="27" fill="url(#dShade)"/>
+
+        <!-- Granule noise — slightly heavier for HD look -->
+        <rect width="120" height="64" filter="url(#dgrain)" opacity="0.12"/>
       </svg>`;
       return svgUri(svg);
     }
 
     case 'metal': {
-      // Standing seam — clean vertical ribs
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="64">
-        <rect width="48" height="64" fill="#c0c4c8"/>
-        <!-- panels -->
-        <rect x="0"  y="0" width="22" height="64" fill="#d0d4d8"/>
-        <rect x="26" y="0" width="22" height="64" fill="#d0d4d8"/>
-        <!-- seam ridges -->
-        <rect x="22" y="0" width="4" height="64" fill="#707478"/>
-        <!-- highlight on ridge -->
-        <rect x="22" y="0" width="1" height="64" fill="#fff" opacity="0.3"/>
-        <rect x="25" y="0" width="1" height="64" fill="#fff" opacity="0.15"/>
-        <!-- subtle panel sheen gradient -->
-        <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0"   stop-color="#fff" stop-opacity="0.12"/>
-          <stop offset="0.5" stop-color="#fff" stop-opacity="0.0"/>
-          <stop offset="1"   stop-color="#000" stop-opacity="0.08"/>
-        </linearGradient>
-        <rect width="48" height="64" fill="url(#sheen)"/>
+      // Standing seam — vertical ribs with metallic sheen, light brushed grain
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="80">
+        <defs>
+          <linearGradient id="panelSheen" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"    stop-color="#fff" stop-opacity="0.10"/>
+            <stop offset="0.35" stop-color="#fff" stop-opacity="0.02"/>
+            <stop offset="0.65" stop-color="#000" stop-opacity="0.02"/>
+            <stop offset="1"    stop-color="#000" stop-opacity="0.08"/>
+          </linearGradient>
+          <linearGradient id="seamGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"    stop-color="#000" stop-opacity="0.3"/>
+            <stop offset="0.3"  stop-color="#000" stop-opacity="0.5"/>
+            <stop offset="0.5"  stop-color="#555" stop-opacity="0.4"/>
+            <stop offset="0.7"  stop-color="#fff" stop-opacity="0.25"/>
+            <stop offset="1"    stop-color="#fff" stop-opacity="0.05"/>
+          </linearGradient>
+          <filter id="brush">
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.6" numOctaves="3" stitchTiles="stitch"/>
+            <feColorMatrix type="saturate" values="0"/>
+          </filter>
+        </defs>
+        <rect width="72" height="80" fill="#c4c8cc"/>
+
+        <!-- Panel face fills -->
+        <rect x="0"  y="0" width="32" height="80" fill="#cdd0d4"/>
+        <rect x="40" y="0" width="32" height="80" fill="#cdd0d4"/>
+
+        <!-- Seam ridges (6px wide with gradient for 3D effect) -->
+        <rect x="31" y="0" width="10" height="80" fill="url(#seamGrad)"/>
+
+        <!-- Panel sheen -->
+        <rect x="0"  y="0" width="32" height="80" fill="url(#panelSheen)"/>
+        <rect x="40" y="0" width="32" height="80" fill="url(#panelSheen)"/>
+
+        <!-- Brushed metal grain — very subtle horizontal lines -->
+        <line x1="0" y1="8"  x2="72" y2="8"  stroke="#999" stroke-width="0.3" opacity="0.15"/>
+        <line x1="0" y1="18" x2="72" y2="18" stroke="#999" stroke-width="0.3" opacity="0.12"/>
+        <line x1="0" y1="30" x2="72" y2="30" stroke="#999" stroke-width="0.3" opacity="0.15"/>
+        <line x1="0" y1="42" x2="72" y2="42" stroke="#999" stroke-width="0.3" opacity="0.12"/>
+        <line x1="0" y1="55" x2="72" y2="55" stroke="#999" stroke-width="0.3" opacity="0.15"/>
+        <line x1="0" y1="68" x2="72" y2="68" stroke="#999" stroke-width="0.3" opacity="0.12"/>
+
+        <!-- Brushed texture overlay -->
+        <rect width="72" height="80" filter="url(#brush)" opacity="0.04"/>
       </svg>`;
       return svgUri(svg);
     }
 
-    // ── SIDING ───────────────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════════
+    //  SIDING TEXTURES
+    // ════════════════════════════════════════════════════════════════════════
 
     case 'horizontal-lap': {
-      // Vinyl lap siding — horizontal boards with woodgrain texture + shadow lines
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40">
-        <rect width="80" height="40" fill="#d0d0d0"/>
-        <!-- board faces -->
-        <rect x="0" y="0"  width="80" height="18" fill="#d8d8d6"/>
-        <rect x="0" y="20" width="80" height="18" fill="#d8d8d6"/>
-        <!-- shadow under each course -->
-        <rect x="0" y="16" width="80" height="4" fill="#404040" opacity="0.45"/>
-        <rect x="0" y="36" width="80" height="4" fill="#404040" opacity="0.45"/>
-        <!-- highlight lip at top of each board -->
-        <rect x="0" y="0"  width="80" height="1.5" fill="#fff" opacity="0.35"/>
-        <rect x="0" y="20" width="80" height="1.5" fill="#fff" opacity="0.35"/>
-        <!-- wood grain lines -->
-        <line x1="0" y1="6"  x2="80" y2="5"  stroke="#b8b8b4" stroke-width="0.7" opacity="0.5"/>
-        <line x1="0" y1="10" x2="80" y2="11" stroke="#b8b8b4" stroke-width="0.5" opacity="0.4"/>
-        <line x1="0" y1="27" x2="80" y2="26" stroke="#b8b8b4" stroke-width="0.7" opacity="0.5"/>
-        <line x1="0" y1="31" x2="80" y2="32" stroke="#b8b8b4" stroke-width="0.5" opacity="0.4"/>
+      // Vinyl lap siding — horizontal courses with woodgrain and shadow lines
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="56">
+        <defs>
+          <filter id="wg">
+            <feTurbulence type="fractalNoise" baseFrequency="0.02 0.8" numOctaves="4" stitchTiles="stitch" result="n"/>
+            <feColorMatrix type="saturate" values="0" in="n" result="grey"/>
+            <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
+          </filter>
+          <linearGradient id="lapShade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.12"/>
+            <stop offset="0.15" stop-color="#fff" stop-opacity="0.04"/>
+            <stop offset="0.7" stop-color="#000" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.10"/>
+          </linearGradient>
+        </defs>
+        <rect width="120" height="56" fill="#c8c8c6"/>
+
+        <!-- Board faces -->
+        <rect x="0" y="0"  width="120" height="24" fill="#d0d0ce"/>
+        <rect x="0" y="28" width="120" height="24" fill="#cdcdcb"/>
+
+        <!-- Underboard shadow (main visual cue for lap profile) -->
+        <rect x="0" y="23" width="120" height="5" fill="#000" opacity="0.30"/>
+        <rect x="0" y="23" width="120" height="1.5" fill="#000" opacity="0.20"/>
+        <rect x="0" y="51" width="120" height="5" fill="#000" opacity="0.30"/>
+        <rect x="0" y="51" width="120" height="1.5" fill="#000" opacity="0.20"/>
+
+        <!-- Highlight lip at top of each board -->
+        <rect x="0" y="0"  width="120" height="1.2" fill="#fff" opacity="0.20"/>
+        <rect x="0" y="28" width="120" height="1.2" fill="#fff" opacity="0.20"/>
+
+        <!-- Depth gradient per board -->
+        <rect x="0" y="0"  width="120" height="24" fill="url(#lapShade)"/>
+        <rect x="0" y="28" width="120" height="24" fill="url(#lapShade)"/>
+
+        <!-- Woodgrain lines — subtle horizontal strokes -->
+        <line x1="0" y1="5"  x2="120" y2="6"  stroke="#aaa" stroke-width="0.6" opacity="0.25"/>
+        <line x1="0" y1="9"  x2="120" y2="8"  stroke="#aaa" stroke-width="0.4" opacity="0.20"/>
+        <line x1="0" y1="14" x2="120" y2="15" stroke="#aaa" stroke-width="0.5" opacity="0.22"/>
+        <line x1="0" y1="18" x2="120" y2="17" stroke="#aaa" stroke-width="0.4" opacity="0.18"/>
+        <line x1="0" y1="33" x2="120" y2="34" stroke="#aaa" stroke-width="0.6" opacity="0.25"/>
+        <line x1="0" y1="37" x2="120" y2="36" stroke="#aaa" stroke-width="0.4" opacity="0.20"/>
+        <line x1="0" y1="42" x2="120" y2="43" stroke="#aaa" stroke-width="0.5" opacity="0.22"/>
+        <line x1="0" y1="46" x2="120" y2="45" stroke="#aaa" stroke-width="0.4" opacity="0.18"/>
+
+        <!-- Woodgrain noise -->
+        <rect width="120" height="56" filter="url(#wg)" opacity="0.06"/>
       </svg>`;
       return svgUri(svg);
     }
 
-    case 'board-batten': {
-      // Vertical board & batten — wide planks + narrow raised battens
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="64">
-        <rect width="48" height="64" fill="#ccccca"/>
-        <!-- board panels -->
-        <rect x="0"  y="0" width="20" height="64" fill="#d4d4d2"/>
-        <rect x="28" y="0" width="20" height="64" fill="#d4d4d2"/>
-        <!-- shadow on right side of each board -->
-        <rect x="20" y="0" width="2"  height="64" fill="#404040" opacity="0.3"/>
-        <rect x="46" y="0" width="2"  height="64" fill="#404040" opacity="0.3"/>
-        <!-- raised batten -->
-        <rect x="20" y="0" width="8" height="64" fill="#c8c8c6"/>
-        <rect x="20" y="0" width="1.5" height="64" fill="#fff" opacity="0.25"/>
-        <rect x="27" y="0" width="1"   height="64" fill="#000" opacity="0.15"/>
-        <!-- vertical grain lines on boards -->
-        <line x1="7"  y1="0" x2="7"  y2="64" stroke="#b8b8b6" stroke-width="0.6" opacity="0.5"/>
-        <line x1="13" y1="0" x2="13" y2="64" stroke="#b8b8b6" stroke-width="0.4" opacity="0.35"/>
-        <line x1="35" y1="0" x2="35" y2="64" stroke="#b8b8b6" stroke-width="0.6" opacity="0.5"/>
-        <line x1="41" y1="0" x2="41" y2="64" stroke="#b8b8b6" stroke-width="0.4" opacity="0.35"/>
+    case 'vertical-panel': {
+      // Vertical plank siding — wide planks with narrow raised battens
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="80">
+        <defs>
+          <filter id="vg">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8 0.02" numOctaves="4" stitchTiles="stitch" result="n"/>
+            <feColorMatrix type="saturate" values="0" in="n" result="grey"/>
+            <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
+          </filter>
+          <linearGradient id="batShade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.10"/>
+            <stop offset="0.15" stop-color="#fff" stop-opacity="0.02"/>
+            <stop offset="0.85" stop-color="#000" stop-opacity="0.02"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.10"/>
+          </linearGradient>
+          <linearGradient id="batRidge" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"   stop-color="#000" stop-opacity="0.22"/>
+            <stop offset="0.15" stop-color="#000" stop-opacity="0.08"/>
+            <stop offset="0.3" stop-color="#fff" stop-opacity="0.10"/>
+            <stop offset="0.5" stop-color="#fff" stop-opacity="0.12"/>
+            <stop offset="0.7" stop-color="#fff" stop-opacity="0.10"/>
+            <stop offset="0.85" stop-color="#000" stop-opacity="0.08"/>
+            <stop offset="1"   stop-color="#000" stop-opacity="0.22"/>
+          </linearGradient>
+        </defs>
+        <rect width="72" height="80" fill="#c8c8c6"/>
+
+        <!-- Board panels -->
+        <rect x="0"  y="0" width="28" height="80" fill="#d0d0ce"/>
+        <rect x="40" y="0" width="28" height="80" fill="#cdcdcb"/>
+
+        <!-- Panel shading (subtle left-right gradient for depth) -->
+        <rect x="0"  y="0" width="28" height="80" fill="url(#batShade)"/>
+        <rect x="40" y="0" width="28" height="80" fill="url(#batShade)"/>
+
+        <!-- Batten ridge — 12px wide raised strip with 3D gradient -->
+        <rect x="27" y="0" width="14" height="80" fill="#c6c6c4"/>
+        <rect x="27" y="0" width="14" height="80" fill="url(#batRidge)"/>
+
+        <!-- Shadow lines where board meets batten -->
+        <rect x="27" y="0" width="1.5" height="80" fill="#000" opacity="0.18"/>
+        <rect x="39.5" y="0" width="1.5" height="80" fill="#000" opacity="0.18"/>
+
+        <!-- Vertical grain lines on boards -->
+        <line x1="7"  y1="0" x2="6"  y2="80" stroke="#aaa" stroke-width="0.5" opacity="0.22"/>
+        <line x1="14" y1="0" x2="15" y2="80" stroke="#aaa" stroke-width="0.4" opacity="0.18"/>
+        <line x1="20" y1="0" x2="19" y2="80" stroke="#aaa" stroke-width="0.4" opacity="0.16"/>
+        <line x1="48" y1="0" x2="49" y2="80" stroke="#aaa" stroke-width="0.5" opacity="0.22"/>
+        <line x1="55" y1="0" x2="54" y2="80" stroke="#aaa" stroke-width="0.4" opacity="0.18"/>
+        <line x1="62" y1="0" x2="63" y2="80" stroke="#aaa" stroke-width="0.4" opacity="0.16"/>
+
+        <!-- Grain on batten -->
+        <line x1="33" y1="0" x2="34" y2="80" stroke="#aaa" stroke-width="0.3" opacity="0.15"/>
+
+        <!-- Woodgrain noise -->
+        <rect width="72" height="80" filter="url(#vg)" opacity="0.06"/>
       </svg>`;
       return svgUri(svg);
     }
 
-    case 'shake': {
-      // Cedar shakes — staggered rough shingles
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48">
-        <rect width="64" height="48" fill="#b8b4ae"/>
-        <!-- row 1 shingles (offset) -->
-        <rect x="0"  y="0" width="19" height="20" rx="1" fill="#c0bcb6"/>
-        <rect x="21" y="0" width="21" height="20" rx="1" fill="#bab6b0"/>
-        <rect x="44" y="0" width="20" height="20" rx="1" fill="#c2beb8"/>
-        <!-- row 2 shingles (offset by half) -->
-        <rect x="-5" y="22" width="17" height="20" rx="1" fill="#bab6b0"/>
-        <rect x="14" y="22" width="20" height="20" rx="1" fill="#c0bcb6"/>
-        <rect x="36" y="22" width="18" height="20" rx="1" fill="#b8b4ae"/>
-        <rect x="56" y="22" width="12" height="20" rx="1" fill="#bcb8b2"/>
-        <!-- shadow at bottom of each row -->
-        <rect x="0" y="19" width="64" height="3" fill="#555" opacity="0.45"/>
-        <rect x="0" y="41" width="64" height="3" fill="#555" opacity="0.45"/>
-        <!-- grain lines on shingles -->
-        <line x1="7"  y1="0" x2="6"  y2="20" stroke="#888" stroke-width="0.5" opacity="0.4"/>
-        <line x1="14" y1="0" x2="14" y2="20" stroke="#888" stroke-width="0.5" opacity="0.35"/>
-        <line x1="30" y1="0" x2="31" y2="20" stroke="#888" stroke-width="0.5" opacity="0.4"/>
-        <line x1="55" y1="0" x2="56" y2="20" stroke="#888" stroke-width="0.5" opacity="0.4"/>
+    case 'rustic-shingle': {
+      // Staggered hand-split shingles — irregular widths, rough grain,
+      // pronounced shadow lines between courses
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="64">
+        <defs>
+          <filter id="sg">
+            <feTurbulence type="fractalNoise" baseFrequency="0.6 0.15" numOctaves="5" stitchTiles="stitch" result="n"/>
+            <feColorMatrix type="saturate" values="0" in="n" result="grey"/>
+            <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
+          </filter>
+          <linearGradient id="shingleShade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.06"/>
+            <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.10"/>
+          </linearGradient>
+        </defs>
+        <rect width="96" height="64" fill="#b5b1ab"/>
+
+        <!-- ROW 1 shingles — varied widths for hand-split look -->
+        <rect x="0"  y="0" width="16" height="27" fill="#bcb8b2" rx="0.8"/>
+        <rect x="18" y="0" width="22" height="27" fill="#b8b4ae" rx="0.8"/>
+        <rect x="42" y="0" width="14" height="27" fill="#c0bcb6" rx="0.8"/>
+        <rect x="58" y="0" width="20" height="27" fill="#b6b2ac" rx="0.8"/>
+        <rect x="80" y="0" width="16" height="27" fill="#bbb7b1" rx="0.8"/>
+        <!-- ROW 2 shingles — offset -->
+        <rect x="-6" y="31" width="20" height="27" fill="#b8b4ae" rx="0.8"/>
+        <rect x="16" y="31" width="18" height="27" fill="#bebab4" rx="0.8"/>
+        <rect x="36" y="31" width="24" height="27" fill="#b4b0aa" rx="0.8"/>
+        <rect x="62" y="31" width="16" height="27" fill="#bcb8b2" rx="0.8"/>
+        <rect x="80" y="31" width="22" height="27" fill="#b6b2ac" rx="0.8"/>
+
+        <!-- Course shadow lines -->
+        <rect x="0" y="26" width="96" height="5" fill="#000" opacity="0.35"/>
+        <rect x="0" y="26" width="96" height="1.5" fill="#000" opacity="0.22"/>
+        <rect x="0" y="57" width="96" height="5" fill="#000" opacity="0.35"/>
+        <rect x="0" y="57" width="96" height="1.5" fill="#000" opacity="0.22"/>
+
+        <!-- Shingle-to-shingle gaps (row 1) -->
+        <rect x="16"  y="0" width="2" height="27" fill="#555" opacity="0.25"/>
+        <rect x="40"  y="0" width="2" height="27" fill="#555" opacity="0.25"/>
+        <rect x="56"  y="0" width="2" height="27" fill="#555" opacity="0.25"/>
+        <rect x="78"  y="0" width="2" height="27" fill="#555" opacity="0.25"/>
+        <!-- Gaps (row 2) -->
+        <rect x="14"  y="31" width="2" height="27" fill="#555" opacity="0.25"/>
+        <rect x="34"  y="31" width="2" height="27" fill="#555" opacity="0.25"/>
+        <rect x="60"  y="31" width="2" height="27" fill="#555" opacity="0.25"/>
+        <rect x="78"  y="31" width="2" height="27" fill="#555" opacity="0.25"/>
+
+        <!-- Depth gradient on each shingle -->
+        <rect x="0" y="0"  width="96" height="27" fill="url(#shingleShade)"/>
+        <rect x="0" y="31" width="96" height="27" fill="url(#shingleShade)"/>
+
+        <!-- Vertical split grain lines on shingles -->
+        <line x1="8"  y1="0" x2="7"  y2="27" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="30" y1="0" x2="31" y2="27" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="50" y1="0" x2="49" y2="27" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="68" y1="0" x2="69" y2="27" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="88" y1="0" x2="87" y2="27" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="6"  y1="31" x2="5"  y2="58" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="26" y1="31" x2="27" y2="58" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="48" y1="31" x2="47" y2="58" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="72" y1="31" x2="73" y2="58" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+        <line x1="90" y1="31" x2="89" y2="58" stroke="#888" stroke-width="0.5" opacity="0.22"/>
+
+        <!-- Roughness noise — heavier for natural hewn look -->
+        <rect width="96" height="64" filter="url(#sg)" opacity="0.09"/>
       </svg>`;
       return svgUri(svg);
     }

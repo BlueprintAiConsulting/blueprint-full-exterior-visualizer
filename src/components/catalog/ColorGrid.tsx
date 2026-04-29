@@ -9,7 +9,7 @@ interface ColorGridProps {
   onMouseEnter?: (color: SidingColor | RoofingColor) => void;
   onMouseLeave?: () => void;
   textureImage?: string;
-  /** textureStyle key passed from the parent line (e.g. 'horizontal-lap', 'shake', 'architectural') */
+  /** textureStyle key passed from the parent line (e.g. 'horizontal-lap', 'rustic-shingle', 'architectural') */
   textureStyle?: string;
   isExpanded: boolean;
   onToggleExpand?: () => void;
@@ -101,15 +101,15 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                     className="absolute inset-0"
                     style={{
                       backgroundImage: textureBg,
-                      backgroundSize: textureStyle === 'board-batten' || textureStyle === 'metal'
-                        ? '48px 64px'
-                        : textureStyle === 'shake'
-                        ? '64px 48px'
+                      backgroundSize: textureStyle === 'vertical-panel' || textureStyle === 'metal'
+                        ? '72px 80px'
+                        : textureStyle === 'rustic-shingle'
+                        ? '96px 64px'
                         : textureStyle === 'designer'
-                        ? '96px 36px'
-                        : '80px 32px',
+                        ? '120px 64px'
+                        : '120px 56px',
                       mixBlendMode: 'multiply',
-                      opacity: 0.52,
+                      opacity: 0.58,
                     }}
                   />
                 )}
