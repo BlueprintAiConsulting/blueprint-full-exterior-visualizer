@@ -75,6 +75,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
         isExpanded={expandedRoofZoneId === zone.id}
         onToggleExpand={() => setExpandedRoofZoneId(expandedRoofZoneId === zone.id ? null : zone.id)}
         ringColor="#3B82F6"
+        textureImage={zone.selectedLine.textureImage}
         textureStyle={zone.selectedLine.textureStyle}
       />
     </div>

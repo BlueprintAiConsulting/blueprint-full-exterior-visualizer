@@ -121,56 +121,60 @@ const SourceAsset: React.FC<SourceAssetProps> = ({
           )}
         </div>
 
-        {/* Home Selection — Landing Experience */}
-        {!selectedImage && (
-          <div className="mt-5">
-            <div className="text-center mb-4">
-              <h3 className="text-sm font-bold text-[#E2E8F0] uppercase tracking-wider">Select Your Home Style</h3>
+        {/* Home Selection — always visible */}
+        <div className={selectedImage ? 'mt-3' : 'mt-5'}>
+          <div className={`text-center ${selectedImage ? 'mb-2' : 'mb-4'}`}>
+            <h3 className={`font-bold text-[#E2E8F0] uppercase tracking-wider ${selectedImage ? 'text-[10px]' : 'text-sm'}`}>
+              {selectedImage ? 'Switch Home Style' : 'Select Your Home Style'}
+            </h3>
+            {!selectedImage && (
               <p className="text-[10px] text-[#64748B] mt-1">Choose a home that looks like yours — or upload your own photo</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {[
-                { src: 'demo-pa-colonial.png',     label: 'Colonial' },
-                { src: 'demo-pa-ranch.png',         label: 'Ranch' },
-                { src: 'demo-pa-bi-level.png',      label: 'Bi-Level' },
-                { src: 'demo-pa-cape-cod.png',      label: 'Cape Cod' },
-                { src: 'demo-pa-split-level.png',   label: 'Split Level' },
-                { src: 'demo-pa-two-story.png',     label: 'Two-Story' },
-              ].map(demo => (
-                <button
-                  key={demo.src}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      const base = import.meta.env.BASE_URL || '/';
-                      const res = await fetch(`${base}${demo.src}`);
-                      const blob = await res.blob();
-                      const file = new File([blob], demo.src, { type: blob.type });
-                      onUpload(file);
-                    } catch {}
-                  }}
-                  className="group relative rounded-xl overflow-hidden border-2 border-[#1E293B] hover:border-[#3B82F6] hover:shadow-[0_0_16px_rgba(59,130,246,0.3)] transition-all aspect-[4/3] bg-[#0A0E17] cursor-pointer"
-                >
-                  <img
-                    src={`${import.meta.env.BASE_URL || '/'}${demo.src}`}
-                    alt={demo.label}
-                    className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <span className="absolute bottom-0 inset-x-0 px-2 py-2 text-[10px] font-bold text-white uppercase tracking-wider text-center">
-                    {demo.label}
-                  </span>
+            )}
+          </div>
+          <div className={`grid gap-2 ${selectedImage ? 'grid-cols-3 sm:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 gap-2.5'}`}>
+            {[
+              { src: 'demo-pa-colonial.png',     label: 'Colonial' },
+              { src: 'demo-pa-ranch.png',         label: 'Ranch' },
+              { src: 'demo-pa-bi-level.png',      label: 'Bi-Level' },
+              { src: 'demo-pa-cape-cod.png',      label: 'Cape Cod' },
+              { src: 'demo-pa-split-level.png',   label: 'Split Level' },
+              { src: 'demo-pa-two-story.png',     label: 'Two-Story' },
+            ].map(demo => (
+              <button
+                key={demo.src}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const base = import.meta.env.BASE_URL || '/';
+                    const res = await fetch(`${base}${demo.src}`);
+                    const blob = await res.blob();
+                    const file = new File([blob], demo.src, { type: blob.type });
+                    onUpload(file);
+                  } catch {}
+                }}
+                className={`group relative rounded-xl overflow-hidden border-2 border-[#1E293B] hover:border-[#3B82F6] hover:shadow-[0_0_16px_rgba(59,130,246,0.3)] transition-all bg-[#0A0E17] cursor-pointer ${selectedImage ? 'aspect-square' : 'aspect-[4/3]'}`}
+              >
+                <img
+                  src={`${import.meta.env.BASE_URL || '/'}${demo.src}`}
+                  alt={demo.label}
+                  className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <span className={`absolute bottom-0 inset-x-0 px-1 font-bold text-white uppercase tracking-wider text-center ${selectedImage ? 'text-[7px] py-1' : 'text-[10px] py-2'}`}>
+                  {demo.label}
+                </span>
+                {!selectedImage && (
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="bg-[#3B82F6] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">
                       Use This Home
                     </span>
                   </div>
-                </button>
-              ))}
-            </div>
+                )}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {imageOptimizeInfo && (

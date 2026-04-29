@@ -36,7 +36,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const visibleColors = isExpanded ? colors : colors.slice(0, PREVIEW_COUNT);
 
   // Pre-compute the texture overlay background-image (same for every swatch in this grid)
-  const textureBg = getTextureOverlayCSS(textureStyle);
+  const textureBg = textureImage ? `url(${textureImage})` : getTextureOverlayCSS(textureStyle);
 
   return (
     <div className="space-y-3">
@@ -53,7 +53,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                 className="absolute inset-0 rounded-md"
                 style={{
                   backgroundImage: textureBg,
-                  backgroundSize: '80px 40px',
+                  backgroundSize: textureImage ? 'cover' : '80px 40px',
                   mixBlendMode: 'multiply',
                   opacity: 0.55,
                 }}
@@ -101,13 +101,15 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                     className="absolute inset-0"
                     style={{
                       backgroundImage: textureBg,
-                      backgroundSize: textureStyle === 'vertical-panel' || textureStyle === 'metal'
-                        ? '72px 80px'
-                        : textureStyle === 'rustic-shingle'
-                        ? '96px 64px'
-                        : textureStyle === 'designer'
-                        ? '120px 64px'
-                        : '120px 56px',
+                      backgroundSize: textureImage ? 'cover' : (
+                        textureStyle === 'vertical-panel' || textureStyle === 'metal'
+                          ? '72px 80px'
+                          : textureStyle === 'rustic-shingle'
+                          ? '96px 64px'
+                          : textureStyle === 'designer'
+                          ? '120px 64px'
+                          : '120px 56px'
+                      ),
                       mixBlendMode: 'multiply',
                       opacity: 0.58,
                     }}

@@ -56,7 +56,7 @@ export const SIDING_OPTIONS: SidingLine[] = [
     line: 'Vertical Panel',
     material: 'Insulated Vertical Vinyl Panel',
     profileLabel: 'Vertical Panel — Woodgrain Texture',
-    textureImage: '/textures/vertical-panel.png',
+    textureImage: '/textures/board-batten.png',
     textureStyle: 'vertical-panel',
     style: 'vertical',
     description: 'Vertical plank profile with insulated foam backing.',
@@ -80,7 +80,7 @@ export const SIDING_OPTIONS: SidingLine[] = [
     line: 'Rustic Shingle',
     material: 'Polymer Shingles',
     profileLabel: 'Staggered Shingle — Natural Hewn Look',
-    textureImage: '/textures/rustic-shingle.png',
+    textureImage: '/textures/cedar-shake.png',
     textureStyle: 'rustic-shingle',
     description: 'Authentic staggered shingle look with natural wood texture.',
     colors: [
@@ -150,7 +150,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Architectural Shingles',
     materialType: 'Architectural Shingles',
     profileLabel: 'Lifetime Laminate — Dimensional Profile',
-    textureImage: '/textures/roof-architectural.png',
+    textureImage: '/textures/roof-architectural.bmp',
     textureStyle: 'architectural',
     description: 'Industry-standard dimensional shingle — 14 colors.',
     colors: [
@@ -175,7 +175,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Designer Shingles',
     materialType: 'Designer Architectural Shingles',
     profileLabel: 'High-Definition — Maximum Dimension',
-    textureImage: '/textures/roof-designer.png',
+    textureImage: '/textures/roof-designer.bmp',
     textureStyle: 'designer',
     description: 'Premium high-contrast laminate with ultra-HD dimension — 8 colors.',
     colors: [
@@ -194,7 +194,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Standing Seam Metal',
     materialType: 'Standing Seam Metal Roof',
     profileLabel: 'Vertical Panel — Concealed Fastener',
-    textureImage: '/textures/roof-storm.png',
+    textureImage: '/textures/roof-storm.bmp',
     textureStyle: 'metal',
     description: 'Premium standing seam metal roofing — 10 colors.',
     colors: [
