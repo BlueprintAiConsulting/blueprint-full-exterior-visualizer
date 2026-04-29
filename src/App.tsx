@@ -114,6 +114,26 @@ const App: React.FC = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [ai.isProcessing, ai.isQuickGenerating]);
 
+  // Preload a demo home image on first mount so the preview isn't empty
+  useEffect(() => {
+    const base = import.meta.env.BASE_URL || '/';
+    fetch(`${base}demo-pa-colonial.png`)
+      .then(res => res.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          setSelectedImage(dataUrl);
+          setShowEnhancePrompt(false); // Don't prompt enhance for the default image
+          const img = new Image();
+          img.onload = () => setImageDimensions({ width: img.width, height: img.height });
+          img.src = dataUrl;
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => {}); // Silently fail if asset missing
+  }, []);
+
 
 
   // --- HANDLERS ---
