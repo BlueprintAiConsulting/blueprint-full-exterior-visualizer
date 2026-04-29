@@ -26,6 +26,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   onMouseLeave,
   isExpanded,
   onToggleExpand,
+  textureImage,
   textureStyle,
   ringColor = '#3B82F6',
   showMoreLabel = 'Show all colors',

@@ -189,7 +189,8 @@ export function getTextureOverlayCSS(style: string | undefined): string | undefi
     //  SIDING TEXTURES
     // ════════════════════════════════════════════════════════════════════════
 
-    case 'horizontal-lap': {
+    case 'horizontal-lap':
+    case 'dutch-lap': {
       // Vinyl lap siding — horizontal courses with woodgrain and shadow lines
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="56">
         <defs>
