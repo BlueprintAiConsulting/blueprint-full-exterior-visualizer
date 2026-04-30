@@ -36,8 +36,10 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const selectedColor = colors.find(c => c.id === selectedColorId);
   const visibleColors = isExpanded ? colors : colors.slice(0, PREVIEW_COUNT);
 
-  // Pre-compute the texture overlay background-image (same for every swatch in this grid)
-  const textureBg = textureImage ? `url(${textureImage})` : getTextureOverlayCSS(textureStyle);
+  // Pre-compute the texture overlay background-image (same for every swatch in this grid).
+  // Prioritise the procedural SVG engine; fall back to a raster image URL only if needed.
+  const svgOverlay = getTextureOverlayCSS(textureStyle);
+  const textureBg = svgOverlay ?? (textureImage ? `url(${textureImage})` : undefined);
 
   return (
     <div className="space-y-3">
@@ -54,7 +56,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                 className="absolute inset-0 rounded-md"
                 style={{
                   backgroundImage: textureBg,
-                  backgroundSize: textureImage ? 'cover' : '80px 40px',
+                  backgroundSize: svgOverlay ? '80px 40px' : 'cover',
                   mixBlendMode: 'multiply',
                   opacity: 0.55,
                 }}
@@ -102,7 +104,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                     className="absolute inset-0"
                     style={{
                       backgroundImage: textureBg,
-                      backgroundSize: textureImage ? 'cover' : (
+                      backgroundSize: !svgOverlay ? 'cover' : (
                         textureStyle === 'vertical-panel' || textureStyle === 'metal'
                           ? '72px 80px'
                           : textureStyle === 'rustic-shingle'
