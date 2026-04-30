@@ -38,7 +38,11 @@ const ColorGrid: React.FC<ColorGridProps> = ({
 
   // Pre-compute the texture overlay background-image (same for every swatch in this grid).
   // Real raster images (AI-generated PNGs) take priority; SVG engine is the fallback.
-  const textureBg = textureImage ? `url(${textureImage})` : getTextureOverlayCSS(textureStyle);
+  // Prepend Vite's BASE_URL so paths resolve on GitHub Pages (/blueprint-full-exterior-visualizer/).
+  const resolvedImage = textureImage
+    ? `${import.meta.env.BASE_URL}${textureImage.replace(/^\//, '')}`
+    : undefined;
+  const textureBg = resolvedImage ? `url(${resolvedImage})` : getTextureOverlayCSS(textureStyle);
 
   return (
     <div className="space-y-3">
