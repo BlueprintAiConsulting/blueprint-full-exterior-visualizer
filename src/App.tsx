@@ -83,6 +83,7 @@ const App: React.FC = () => {
   const [swatchPreviewHex, setSwatchPreviewHex] = useState<string | null>(null);
   const [swatchPreviewName, setSwatchPreviewName] = useState<string | null>(null);
   const [swatchPreviewImage, setSwatchPreviewImage] = useState<string | null>(null);
+  const [swatchPreviewTextureStyle, setSwatchPreviewTextureStyle] = useState<string | null>(null);
   const [elapsedSecs, setElapsedSecs] = useState(0);
   const [imageDimensions, setImageDimensions] = useState({ width: 1920, height: 1080 });
   const [imageOptimizeInfo, setImageOptimizeInfo] = useState<string | null>(null);
@@ -419,8 +420,8 @@ const App: React.FC = () => {
                         setQuickRoofZones={setQuickRoofZones}
                         expandedRoofZoneId={expandedRoofZoneId}
                         setExpandedRoofZoneId={setExpandedRoofZoneId}
-                        onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(c.swatchImage || null); }}
-                        onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); }}
+                        onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(c.swatchImage || null); setSwatchPreviewTextureStyle(quickRoofZones[0]?.selectedLine.textureStyle || null); }}
+                        onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); setSwatchPreviewTextureStyle(null); }}
                       />
                     </div>
                   )}
@@ -462,8 +463,8 @@ const App: React.FC = () => {
                         setQuickZones={setQuickZones}
                         expandedZoneId={expandedZoneId}
                         setExpandedZoneId={setExpandedZoneId}
-                        onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(null); }}
-                        onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); }}
+                        onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(null); setSwatchPreviewTextureStyle(quickZones.find(z => z.id === 'qz-main')?.selectedLine.textureStyle || null); }}
+                        onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); setSwatchPreviewTextureStyle(null); }}
                       />
                     </div>
                   )}
@@ -672,6 +673,7 @@ const App: React.FC = () => {
                 swatchPreviewHex={swatchPreviewHex}
                 swatchPreviewName={swatchPreviewName}
                 swatchPreviewImage={swatchPreviewImage}
+                swatchPreviewTextureStyle={swatchPreviewTextureStyle}
                 sections={sections}
                 currentSectionId={currentSectionId}
                 hoveredSectionId={hoveredSectionId}
@@ -691,6 +693,7 @@ const App: React.FC = () => {
         leadCaptureEnabled={LEAD_CAPTURE_ENABLED}
         visualizationImage={quickResult || resultImage}
         roofZones={quickRoofZones}
+        sidingZones={quickZones}
         onShowToS={() => { setShowQuoteModal(false); setTimeout(() => setShowTermsModal(true), 200); }}
         onShowPrivacy={() => { setShowQuoteModal(false); setTimeout(() => setShowPrivacyModal(true), 200); }}
       />

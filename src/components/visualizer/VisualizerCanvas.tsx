@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Loader2, ArrowLeftRight, ZoomIn, ZoomOut, Hand, Maximize, ImageIcon } from 'lucide-react';
+import { getTextureOverlayCSS } from '../../utils/textures';
 
 interface VisualizerCanvasProps {
   selectedImage: string | null;
@@ -26,6 +27,7 @@ interface VisualizerCanvasProps {
   swatchPreviewHex: string | null;
   swatchPreviewName: string | null;
   swatchPreviewImage: string | null;
+  swatchPreviewTextureStyle?: string | null;
   sections: any[];
   currentSectionId: string | null;
   hoveredSectionId: string | null;
@@ -58,6 +60,7 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
   swatchPreviewHex,
   swatchPreviewName,
   swatchPreviewImage,
+  swatchPreviewTextureStyle,
   sections,
   currentSectionId,
   hoveredSectionId,
@@ -206,23 +209,30 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
                 }}
               >
                 <img src={selectedImage} alt="Workspace" className="max-w-full max-h-full object-contain block pointer-events-none" />
-                {swatchPreviewHex && (
+                {swatchPreviewHex && (() => {
+                  const texBg = swatchPreviewImage ? undefined : getTextureOverlayCSS(swatchPreviewTextureStyle || undefined);
+                  return (
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none z-10">
                     <div className="w-20 h-12 rounded-lg shadow-2xl border border-white/20 overflow-hidden relative" style={{ backgroundColor: swatchPreviewHex }}>
-                      {swatchPreviewImage && (
+                      {swatchPreviewImage ? (
                         <img src={swatchPreviewImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      )}
+                      ) : texBg ? (
+                        <div className="absolute inset-0" style={{ backgroundImage: texBg, backgroundSize: swatchPreviewTextureStyle === 'metal' ? '72px 80px' : swatchPreviewTextureStyle === 'designer' ? '120px 64px' : '120px 56px', mixBlendMode: 'multiply', opacity: 0.55 }} />
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-2 bg-[#0F172A]/90 backdrop-blur-md border border-[#334155] rounded-full px-3 py-1.5 shadow-xl">
                       <div className="w-2.5 h-2.5 rounded-full border border-white/20 shrink-0 overflow-hidden relative" style={{ backgroundColor: swatchPreviewHex }}>
-                        {swatchPreviewImage && (
+                        {swatchPreviewImage ? (
                           <img src={swatchPreviewImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                        )}
+                        ) : texBg ? (
+                          <div className="absolute inset-0" style={{ backgroundImage: texBg, backgroundSize: 'cover', mixBlendMode: 'multiply', opacity: 0.55 }} />
+                        ) : null}
                       </div>
                       <span className="text-[10px] font-bold text-[#E2E8F0] uppercase tracking-wider whitespace-nowrap">{swatchPreviewName}</span>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
                 <canvas
                   ref={canvasRef}
                   width={imageDimensions.width}

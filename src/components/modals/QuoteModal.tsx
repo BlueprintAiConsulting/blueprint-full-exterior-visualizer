@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Loader2, Sparkles, Lock, ImageIcon, Shield } from 'lucide-react';
-import { QuickRoofZone } from '../../types';
+import { QuickRoofZone, QuickZone } from '../../types';
 import { API_BASE } from '../../utils/apiConfig';
 
 interface QuoteModalProps {
@@ -10,11 +10,12 @@ interface QuoteModalProps {
   leadCaptureEnabled?: boolean;
   visualizationImage?: string | null;
   roofZones?: QuickRoofZone[];
+  sidingZones?: QuickZone[];
   onShowToS?: () => void;
   onShowPrivacy?: () => void;
 }
 
-const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEnabled = false, visualizationImage = null, roofZones = [], onShowToS, onShowPrivacy }) => {
+const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEnabled = false, visualizationImage = null, roofZones = [], sidingZones = [], onShowToS, onShowPrivacy }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -38,6 +39,12 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
       primaryHex: mainZone.selectedColor.hex,
       sections: activeZones.map(z => ({
         name: z.name,
+        line: z.selectedLine.line,
+        color: z.selectedColor.name,
+        hex: z.selectedColor.hex,
+      })),
+      siding: sidingZones.filter(z => z.enabled).map(z => ({
+        zone: z.name,
         line: z.selectedLine.line,
         color: z.selectedColor.name,
         hex: z.selectedColor.hex,
@@ -213,6 +220,29 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
                           <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-bold text-[#E2E8F0] leading-tight">{color.name}</p>
                             <p className="text-[9px] text-[#64748B] mt-0.5">{line.line} · {color.hex.toUpperCase()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Selected Siding Summary */}
+                  {(() => {
+                    const mainSiding = sidingZones.find(z => z.id === 'qz-main' && z.enabled);
+                    if (!mainSiding) return null;
+                    return (
+                      <div className="rounded-xl border border-[#1E293B] bg-[#111827] overflow-hidden">
+                        <div className="flex items-center gap-2 px-3 py-2 border-b border-[#1E293B]">
+                          <div className="w-3 h-3 rounded bg-[#1E3A8A] flex items-center justify-center">
+                            <span className="text-[7px] font-bold text-[#60A5FA]">◆</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">Selected Siding</span>
+                        </div>
+                        <div className="flex items-center gap-3 px-4 py-3">
+                          <div className="w-14 h-10 rounded-lg border border-white/10 shrink-0" style={{ backgroundColor: mainSiding.selectedColor.hex }} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-bold text-[#E2E8F0] leading-tight">{mainSiding.selectedColor.name}</p>
+                            <p className="text-[9px] text-[#64748B] mt-0.5">{mainSiding.selectedLine.line} · {mainSiding.selectedColor.hex.toUpperCase()}</p>
                           </div>
                         </div>
                       </div>
