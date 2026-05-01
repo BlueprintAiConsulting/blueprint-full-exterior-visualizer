@@ -1,7 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Loader2, ArrowLeftRight, ZoomIn, ZoomOut, Hand, Maximize, ImageIcon } from 'lucide-react';
 import { getTextureOverlayCSS } from '../../utils/textures';
+
+/* ─── Self-contained rendering overlay ─────────────────────────────────────── *
+ * Keeps the elapsed-seconds timer local so the parent never re-renders every
+ * second during AI processing.                                                */
+const RenderingOverlay: React.FC = () => {
+  const [elapsedSecs, setElapsedSecs] = useState(0);
+  useEffect(() => {
+    setElapsedSecs(0);
+    const id = setInterval(() => setElapsedSecs(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full p-8 flex flex-col items-center justify-center gap-8">
+      <div className="relative shrink-0">
+        <div className="w-24 h-24 border-2 border-[#1E3A8A] border-t-[#60A5FA] rounded-full animate-spin shadow-[0_0_20px_rgba(59,130,246,0.25)]" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 bg-[#0F172A] rounded-full flex items-center justify-center border border-[#1E293B] shadow-lg"><Sparkles className="w-6 h-6 text-[#60A5FA]" /></div>
+        </div>
+      </div>
+      <div className="w-full max-w-sm text-center space-y-4">
+        <p className="font-bold text-sm uppercase tracking-[0.3em] text-[#60A5FA]">Rendering Exterior</p>
+        <p className="text-[#94A3B8] text-[11px] font-medium tracking-wide">
+          {[
+            `Analyzing roof structure…`,
+            `Mapping shingle pattern…`,
+            `Calibrating color values…`,
+            `Applying light & shadow…`,
+            `Rendering photorealistic exterior…`,
+            `Finalizing material details…`,
+          ][Math.floor(elapsedSecs / 6) % 6]}
+        </p>
+        <div className="w-full h-1.5 bg-[#1E293B] rounded-full overflow-hidden border border-[#334155]/50">
+          <div className="h-full bg-gradient-to-r from-[#1D4ED8] via-[#3B82F6] to-[#60A5FA] rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all duration-1000 ease-out" style={{ width: `${Math.min(96, 100 * (1 - Math.exp(-elapsedSecs / 38)))}%` }} />
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 interface VisualizerCanvasProps {
   selectedImage: string | null;
@@ -21,7 +60,6 @@ interface VisualizerCanvasProps {
   onStartPan: (x: number, y: number) => void;
   onMovePan: (x: number, y: number) => void;
   onEndPan: () => void;
-  elapsedSecs: number;
   appMode: 'quick' | 'advanced';
   onQuoteClick: () => void;
   swatchPreviewHex: string | null;
@@ -54,7 +92,6 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
   onStartPan,
   onMovePan,
   onEndPan,
-  elapsedSecs,
   appMode,
   onQuoteClick,
   swatchPreviewHex,
@@ -69,6 +106,30 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
   SECTION_COLORS
 }) => {
   const currentResult = appMode === 'quick' ? quickResult : resultImage;
+
+  /* ── rAF-throttled slider updates ─────────────────────────────────────── *
+   * Buffers high-frequency touch/mouse positions into a ref and flushes to
+   * React state at most once per animation frame → smooth 60 fps slider.   */
+  const pendingSliderPos = useRef<number | null>(null);
+  const rafId = useRef<number>(0);
+
+  const flushSliderPos = useCallback(() => {
+    if (pendingSliderPos.current !== null) {
+      setSliderPos(pendingSliderPos.current);
+      pendingSliderPos.current = null;
+    }
+    rafId.current = 0;
+  }, [setSliderPos]);
+
+  const scheduleSliderUpdate = useCallback((pos: number) => {
+    pendingSliderPos.current = pos;
+    if (!rafId.current) {
+      rafId.current = requestAnimationFrame(flushSliderPos);
+    }
+  }, [flushSliderPos]);
+
+  // Clean up any pending rAF on unmount
+  useEffect(() => () => { if (rafId.current) cancelAnimationFrame(rafId.current); }, []);
 
   return (
     <div className="flex-1 relative bg-[#0A0E17] flex items-center justify-center overflow-hidden">
@@ -103,11 +164,11 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
                   onStartPan(e.clientX, e.clientY);
                   return;
                 }
-                // Before/after slider drag
+                // Before/after slider drag — rAF-throttled
                 const rect = e.currentTarget.getBoundingClientRect();
-                const update = (cx: number) => setSliderPos(Math.max(0, Math.min(100, ((cx - rect.left) / rect.width) * 100)));
-                update(e.clientX);
-                const onMove = (ev: MouseEvent) => update(ev.clientX);
+                const calc = (cx: number) => Math.max(0, Math.min(100, ((cx - rect.left) / rect.width) * 100));
+                scheduleSliderUpdate(calc(e.clientX));
+                const onMove = (ev: MouseEvent) => scheduleSliderUpdate(calc(ev.clientX));
                 const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onUp);
@@ -124,12 +185,12 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
               onTouchStart={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const touch = e.touches[0];
-                setSliderPos(Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100)));
+                scheduleSliderUpdate(Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100)));
               }}
               onTouchMove={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const touch = e.touches[0];
-                setSliderPos(Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100)));
+                scheduleSliderUpdate(Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100)));
               }}
             >
               {/* Zoom/pan wrapper around both images */}
@@ -165,30 +226,7 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
             </motion.div>
           </motion.div>
         ) : (isProcessing || isQuickGenerating) ? (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full p-8 flex flex-col items-center justify-center gap-8">
-            <div className="relative shrink-0">
-              <div className="w-24 h-24 border-2 border-[#1E3A8A] border-t-[#60A5FA] rounded-full animate-spin shadow-[0_0_20px_rgba(59,130,246,0.25)]" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-[#0F172A] rounded-full flex items-center justify-center border border-[#1E293B] shadow-lg"><Sparkles className="w-6 h-6 text-[#60A5FA]" /></div>
-              </div>
-            </div>
-            <div className="w-full max-w-sm text-center space-y-4">
-              <p className="font-bold text-sm uppercase tracking-[0.3em] text-[#60A5FA]">Rendering New Roof</p>
-              <p className="text-[#94A3B8] text-[11px] font-medium tracking-wide">
-                {[
-                  `Analyzing roof structure…`,
-                  `Mapping shingle pattern…`,
-                  `Calibrating color values…`,
-                  `Applying light & shadow…`,
-                  `Rendering photorealistic roof…`,
-                  `Finalizing shingle details…`,
-                ][Math.floor(elapsedSecs / 6) % 6]}
-              </p>
-              <div className="w-full h-1.5 bg-[#1E293B] rounded-full overflow-hidden border border-[#334155]/50">
-                <div className="h-full bg-gradient-to-r from-[#1D4ED8] via-[#3B82F6] to-[#60A5FA] rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all duration-1000 ease-out" style={{ width: `${Math.min(96, 100 * (1 - Math.exp(-elapsedSecs / 38)))}%` }} />
-              </div>
-            </div>
-          </motion.div>
+          <RenderingOverlay />
         ) : selectedImage ? (
           <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full p-4 flex flex-col relative">
             <div className="absolute top-3 right-4 hidden sm:flex items-center gap-1.5 bg-[#0F172A]/90 backdrop-blur-md border border-[#334155] rounded-full px-3 py-1.5 shadow-xl z-20">
@@ -258,4 +296,4 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
   );
 };
 
-export default VisualizerCanvas;
+export default React.memo(VisualizerCanvas);

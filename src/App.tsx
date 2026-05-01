@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Zap, Package, Undo, Redo, Sparkles, Loader2, Pencil, Info, Home, ChevronDown
-} from 'lucide-react';
+import { Sparkles, Loader2, Pencil, Info, Home, ChevronDown } from 'lucide-react';
 
 // Types & Constants
-import { Section, SidingLine, SidingColor, QuickZone, QuickRoofZone } from './types';
+import { QuickZone, QuickRoofZone } from './types';
 import { 
-  SIDING_OPTIONS, DEFAULT_QUICK_ZONES, DEFAULT_QUICK_ROOF_ZONES, SECTION_COLORS,
+  DEFAULT_QUICK_ZONES, DEFAULT_QUICK_ROOF_ZONES, SECTION_COLORS,
   SHUTTER_COLORS, TRIM_COLORS
 } from './constants/catalog';
 
@@ -18,14 +16,11 @@ import QuoteModal from './components/modals/QuoteModal';
 import { TermsOfUseModal as TermsModal, PrivacyPolicyModal as PrivacyModal } from './components/modals/LegalModals';
 import InfoModal from './components/modals/InfoModal';
 import SourceAsset from './components/visualizer/SourceAsset';
-import AISectionSeparator from './components/visualizer/AISectionSeparator';
 import VisualizerCanvas from './components/visualizer/VisualizerCanvas';
 import SidingCatalog from './components/catalog/SidingCatalog';
 import RoofingCatalog from './components/catalog/RoofingCatalog';
-import AdvancedCatalog from './components/catalog/AdvancedCatalog';
 
 // Hooks & Utils
-import { useHistory } from './hooks/useHistory';
 import { useZoomPan } from './hooks/useZoomPan';
 import { useAIProcessing } from './hooks/useAIProcessing';
 import { downscaleImage } from './utils/image';
@@ -33,20 +28,13 @@ import { API_BASE } from './utils/apiConfig';
 
 // ---------------------------------------------------------------------------
 // FEATURE FLAGS
-// SIDING_ENABLED     — set true when siding integration is ready
-// LEAD_CAPTURE_ENABLED — set true when client upgrades to Pro/Premium tier
-//                        (enables quote form + email lead delivery)
 // ---------------------------------------------------------------------------
-const SIDING_ENABLED = true;
 const LEAD_CAPTURE_ENABLED = true;
-const ADVANCED_ENABLED = false; // Disabled — perfecting Quick Mode first
 
 
 
 const App: React.FC = () => {
   // --- CORE STATE ---
-  const [appMode, setAppMode] = useState<'quick' | 'advanced'>('quick');
-  const [exteriorType, setExteriorType] = useState<'siding' | 'roofing'>(SIDING_ENABLED ? 'siding' : 'roofing');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [quickResult, setQuickResult] = useState<string | null>(null);
@@ -59,24 +47,11 @@ const App: React.FC = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEnhancePrompt, setShowEnhancePrompt] = useState(false);
   
-  // --- ADVANCED MODE STATE ---
-  const { 
-    state: sections, 
-    setState: setSections, 
-    undo, redo, saveState: saveHistory,
-    canUndo, canRedo 
-  } = useHistory<Section[]>([]);
-  
-  const [currentSectionId, setCurrentSectionId] = useState<string | null>(null);
-  const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
-  const [optionalSections, setOptionalSections] = useState<{name: string, maskTarget: string}[]>([]);
-  
   // --- QUICK MODE STATE ---
   const [quickZones, setQuickZones] = useState<QuickZone[]>(DEFAULT_QUICK_ZONES);
   const [quickRoofZones, setQuickRoofZones] = useState<QuickRoofZone[]>(DEFAULT_QUICK_ROOF_ZONES);
   const [expandedRoofZoneId, setExpandedRoofZoneId] = useState<string | null>(null);
   const [expandedZoneId, setExpandedZoneId] = useState<string | null>(null);
-  const [expandedColorZones, setExpandedColorZones] = useState<Set<string>>(new Set());
   
   // --- UI & CANVAS STATE ---
   const [sliderPos, setSliderPos] = useState(100);
@@ -84,7 +59,6 @@ const App: React.FC = () => {
   const [swatchPreviewName, setSwatchPreviewName] = useState<string | null>(null);
   const [swatchPreviewImage, setSwatchPreviewImage] = useState<string | null>(null);
   const [swatchPreviewTextureStyle, setSwatchPreviewTextureStyle] = useState<string | null>(null);
-  const [elapsedSecs, setElapsedSecs] = useState(0);
   const [imageDimensions, setImageDimensions] = useState({ width: 1920, height: 1080 });
   const [imageOptimizeInfo, setImageOptimizeInfo] = useState<string | null>(null);
 
@@ -96,24 +70,12 @@ const App: React.FC = () => {
   // --- REFS ---
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- HOOKS ---
   const zoomPan = useZoomPan();
   const ai = useAIProcessing();
 
-  const currentSection = sections.find(s => s.id === currentSectionId) || null;
-
   // --- EFFECTS ---
-  useEffect(() => {
-    if (ai.isProcessing || ai.isQuickGenerating) {
-      setElapsedSecs(0);
-      timerRef.current = setInterval(() => setElapsedSecs(s => s + 1), 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [ai.isProcessing, ai.isQuickGenerating]);
 
   // Preload a demo home image on first mount so the preview isn't empty
   useEffect(() => {
@@ -146,7 +108,7 @@ const App: React.FC = () => {
       setQuickResult(null);
       setResultImage(null);
       setEnhancedImage(null);
-      setSections([]);
+
       setShowEnhancePrompt(true);
       
       const img = new Image();
@@ -164,53 +126,25 @@ const App: React.FC = () => {
     setResultImage(null);
     setEnhancedImage(null);
     setShowEnhancePrompt(false);
-    setSections([]);
     setQuickZones(DEFAULT_QUICK_ZONES);
     setQuickRoofZones(DEFAULT_QUICK_ROOF_ZONES);
     setImageOptimizeInfo(null);
     zoomPan.resetView();
   };
 
-  const detectAndMaskSections = async () => {
-    if (!selectedImage) return;
-    ai.setIsDetectingSections(true);
-    ai.setDetectionProgress('Analyzing architecture...');
-    try {
-      const scaled = await downscaleImage(selectedImage, 1024);
-      const res = await fetch(`${API_BASE}/api/detect-sections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          imageBase64: scaled.split(',')[1], 
-          mimeType: 'image/jpeg', 
-          type: exteriorType 
-        }),
-      });
-      const data = await res.json();
-      if (data.sections) {
-        setSections(data.sections);
-        setOptionalSections(data.optional || []);
-        if (data.sections.length > 0) setCurrentSectionId(data.sections[0].id);
-        ai.setDetectionProgress('✓ Sections defined');
-      }
-    } catch (e) {
-      ai.setError('Failed to detect sections.');
-    } finally {
-      ai.setIsDetectingSections(false);
-    }
-  };
+
 
   const togglePanel = (panel: string) => {
     setActivePanel(prev => prev === panel ? null : panel);
   };
 
   const hasRoofChanges = quickRoofZones.some(z => z.enabled || z.id === 'rz-main');
-  const hasSidingChanges = SIDING_ENABLED && quickZones.some(z => z.enabled);
+  const hasSidingChanges = quickZones.some(z => z.enabled);
 
   const handleGenerate = async () => {
     if (!selectedImage) return;
     
-    if (appMode === 'quick') {
+    {
       ai.setIsQuickGenerating(true);
       ai.setError(null);
       setRoofPassResult(null);
@@ -280,30 +214,6 @@ const App: React.FC = () => {
         ai.setIsQuickGenerating(false);
         setTimeout(() => setRenderPhase('idle'), 2000);
       }
-    } else {
-      // Advanced generation logic (unchanged)
-      ai.setIsProcessing(true);
-      try {
-        const scaled = await downscaleImage(selectedImage, 1536);
-        const res = await fetch(exteriorType === 'roofing' ? `${API_BASE}/api/roof-generate` : `${API_BASE}/api/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageBase64: scaled.split(',')[1],
-            sections: sections.map(s => ({
-              maskBase64: s.maskData?.split(',')[1],
-              color_hex: s.selectedColor.hex,
-              texture: s.selectedLine.textureImage
-            }))
-          })
-        });
-        const data = await res.json();
-        if (data.resultImage) setResultImage(data.resultImage);
-      } catch (e) {
-        ai.setError('Generation failed.');
-      } finally {
-        ai.setIsProcessing(false);
-      }
     }
   };
 
@@ -345,23 +255,6 @@ const App: React.FC = () => {
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-4 sm:gap-6">
           <div className="lg:col-span-4 space-y-3 lg:space-y-6">
-            {/* Mode Toggles — only shown when Advanced Mode is enabled */}
-            {ADVANCED_ENABLED && (
-            <div className="flex bg-[#111827] rounded-xl p-1.5 border border-[#1E293B] shadow-lg">
-              <button 
-                onClick={() => setAppMode('quick')} 
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${appMode === 'quick' ? 'bg-[#1E3A8A] text-[#60A5FA] shadow-lg border border-[#3B82F6]/30' : 'text-[#64748B] hover:text-[#94A3B8]'}`}
-              >
-                <Zap className="w-3.5 h-3.5" /> Quick Mode
-              </button>
-              <button 
-                onClick={() => setAppMode('advanced')} 
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${appMode === 'advanced' ? 'bg-[#1E3A8A] text-[#60A5FA] shadow-lg border border-[#3B82F6]/30' : 'text-[#64748B] hover:text-[#94A3B8]'}`}
-              >
-                <Package className="w-3.5 h-3.5" /> Advanced
-              </button>
-            </div>
-            )}
 
             <SourceAsset 
               selectedImage={selectedImage}
@@ -386,7 +279,7 @@ const App: React.FC = () => {
             />
 
             {/* Catalog Area */}
-            {appMode === 'quick' ? (
+            {
               <div className="space-y-4">
                 {/* --- ROOFING SECTION --- */}
                 <div className={`rounded-xl border overflow-hidden transition-colors ${activePanel === 'roof' ? 'border-[#334155]' : 'border-[#1E293B]'}`}>
@@ -428,7 +321,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* --- SIDING SECTION --- */}
-                {SIDING_ENABLED && (
+                {
                 <div className={`rounded-xl border overflow-hidden transition-colors ${activePanel === 'siding' ? 'border-[#334155]' : 'border-[#1E293B]'}`}>
                   <button
                     onClick={() => togglePanel('siding')}
@@ -469,10 +362,10 @@ const App: React.FC = () => {
                     </div>
                   )}
                 </div>
-                )}
+                }
 
                 {/* --- ACCENTS SECTION (Trim & Shutters) --- */}
-                {SIDING_ENABLED && (
+                {
                 <div className={`rounded-xl border overflow-hidden transition-colors ${activePanel === 'accents' ? 'border-[#334155]' : 'border-[#1E293B]'}`}>
                   <button
                     onClick={() => togglePanel('accents')}
@@ -553,7 +446,7 @@ const App: React.FC = () => {
                     </div>
                   )}
                 </div>
-                )}
+                }
 
                 {/* --- RENDER PROGRESS --- */}
                 {renderPhase !== 'idle' && (
@@ -569,42 +462,7 @@ const App: React.FC = () => {
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex bg-[#111827] rounded-xl p-1 border border-[#1E293B]">
-                  <button onClick={() => setExteriorType('siding')} className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${exteriorType === 'siding' ? 'bg-[#0F172A] text-[#60A5FA]' : 'text-[#475569] hover:text-[#94A3B8]'}`}>Siding</button>
-                  <button onClick={() => setExteriorType('roofing')} className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${exteriorType === 'roofing' ? 'bg-[#0F172A] text-[#60A5FA]' : 'text-[#475569] hover:text-[#94A3B8]'}`}>Roofing</button>
-                </div>
-                <AISectionSeparator 
-                  selectedImage={selectedImage}
-                  exteriorType={exteriorType}
-                  isDetectingSections={ai.isDetectingSections}
-                  detectionProgress={ai.detectionProgress}
-                  onDetectSections={detectAndMaskSections}
-                  sections={sections}
-                  currentSectionId={currentSectionId}
-                  onSwitchSection={setCurrentSectionId}
-                  onRemoveSection={(id) => setSections(prev => prev.filter(s => s.id !== id))}
-                  onSetSections={setSections}
-                  setHoveredSectionId={setHoveredSectionId}
-                />
-                <AdvancedCatalog 
-                  currentSection={currentSection}
-                  onUpdateSection={setSections}
-                  onSaveHistory={saveHistory}
-                  onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(null); }}
-                  onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); }}
-                  expandedColorZones={expandedColorZones}
-                  onToggleColorZone={(key) => {
-                    setExpandedColorZones(prev => {
-                      const next = new Set(prev);
-                      if (next.has(key)) next.delete(key); else next.add(key);
-                      return next;
-                    });
-                  }}
-                />
-              </div>
-            )}
+            }
 
             {/* Disclaimer & Action Button */}
             <div className="flex items-start gap-2 px-3 py-2.5 bg-[#0A0E17] border border-[#1E293B] rounded-lg">
@@ -643,10 +501,7 @@ const App: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" /><span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Engine Active</span></div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={undo} disabled={!canUndo} className={`p-1.5 rounded ${!canUndo ? 'text-[#334155]' : 'text-[#94A3B8] hover:bg-[#1E293B]'}`}><Undo className="w-3.5 h-3.5" /></button>
-                  <button onClick={redo} disabled={!canRedo} className={`p-1.5 rounded ${!canRedo ? 'text-[#334155]' : 'text-[#94A3B8] hover:bg-[#1E293B]'}`}><Redo className="w-3.5 h-3.5" /></button>
-                </div>
+
               </div>
 
               <VisualizerCanvas 
@@ -667,16 +522,15 @@ const App: React.FC = () => {
                 onStartPan={zoomPan.startPan}
                 onMovePan={zoomPan.movePan}
                 onEndPan={zoomPan.endPan}
-                elapsedSecs={elapsedSecs}
-                appMode={appMode}
+                appMode={'quick'}
                 onQuoteClick={() => setShowQuoteModal(true)}
                 swatchPreviewHex={swatchPreviewHex}
                 swatchPreviewName={swatchPreviewName}
                 swatchPreviewImage={swatchPreviewImage}
                 swatchPreviewTextureStyle={swatchPreviewTextureStyle}
-                sections={sections}
-                currentSectionId={currentSectionId}
-                hoveredSectionId={hoveredSectionId}
+                sections={[]}
+                currentSectionId={null}
+                hoveredSectionId={null}
                 imageDimensions={imageDimensions}
                 canvasRef={canvasRef}
                 SECTION_COLORS={SECTION_COLORS}
