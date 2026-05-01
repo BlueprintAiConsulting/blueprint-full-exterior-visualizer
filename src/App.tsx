@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Loader2, Pencil, Info, Home, ChevronDown } from 'lucide-react';
+import { Sparkles, Loader2, Pencil, Info, Home, ChevronDown, Lock, ShieldCheck } from 'lucide-react';
 
 // Types & Constants
 import { QuickZone, QuickRoofZone } from './types';
@@ -30,6 +30,142 @@ import { API_BASE } from './utils/apiConfig';
 // FEATURE FLAGS
 // ---------------------------------------------------------------------------
 const LEAD_CAPTURE_ENABLED = true;
+
+// ---------------------------------------------------------------------------
+// ACCESS GATE — change this code to control who can use the app
+// ---------------------------------------------------------------------------
+const ACCESS_CODE = 'blueprint2026';
+const ACCESS_KEY = 'bpenv_access';
+
+const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [unlocked, setUnlocked] = useState(() => {
+    try { return localStorage.getItem(ACCESS_KEY) === 'granted'; } catch { return false; }
+  });
+  const [code, setCode] = useState('');
+  const [error, setError] = useState(false);
+  const [shaking, setShaking] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code.trim().toLowerCase() === ACCESS_CODE.toLowerCase()) {
+      try { localStorage.setItem(ACCESS_KEY, 'granted'); } catch {}
+      setUnlocked(true);
+    } else {
+      setError(true);
+      setShaking(true);
+      setTimeout(() => setShaking(false), 500);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  if (unlocked) return <>{children}</>;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: '#050810',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Inter', -apple-system, sans-serif",
+    }}>
+      {/* Background grid */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px)',
+        backgroundSize: '64px 64px',
+      }} />
+      {/* Glow */}
+      <div style={{
+        position: 'absolute', top: '-30%', left: '50%', transform: 'translateX(-50%)',
+        width: 600, height: 600, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      <form onSubmit={handleSubmit} style={{
+        position: 'relative', zIndex: 1,
+        background: '#0F172A', border: '1px solid #1E293B',
+        borderRadius: 20, padding: '48px 40px', maxWidth: 400, width: '90%',
+        textAlign: 'center',
+        boxShadow: '0 24px 80px rgba(0,0,0,0.5), 0 0 60px rgba(59,130,246,0.1)',
+        animation: shaking ? 'shake 0.4s ease' : undefined,
+      }}>
+        <style>{`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+          }
+          .gate-input:focus { outline: none; border-color: #3B82F6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important; }
+        `}</style>
+
+        <div style={{
+          width: 56, height: 56, borderRadius: 16, margin: '0 auto 20px',
+          background: 'linear-gradient(135deg, #1D4ED8, #3B82F6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 24px rgba(59,130,246,0.35)',
+        }}>
+          <Lock style={{ width: 24, height: 24, color: 'white' }} />
+        </div>
+
+        <h2 style={{
+          fontSize: 20, fontWeight: 800, color: '#F1F5F9',
+          letterSpacing: '-0.03em', marginBottom: 6,
+        }}>BlueprintEnvision</h2>
+        <p style={{
+          fontSize: 12, color: '#64748B', marginBottom: 28,
+          fontWeight: 500, letterSpacing: '0.02em',
+        }}>Enter your access code to continue</p>
+
+        <input
+          className="gate-input"
+          type="password"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="Access code"
+          autoFocus
+          style={{
+            width: '100%', padding: '14px 16px',
+            background: '#0A0E17', border: '1px solid #1E293B',
+            borderRadius: 12, color: '#F1F5F9', fontSize: 14,
+            fontFamily: 'inherit', fontWeight: 600,
+            letterSpacing: '0.1em', textAlign: 'center',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+          }}
+        />
+
+        {error && (
+          <p style={{
+            fontSize: 11, color: '#EF4444', fontWeight: 600,
+            marginTop: 10, letterSpacing: '0.04em',
+          }}>Invalid access code</p>
+        )}
+
+        <button type="submit" style={{
+          width: '100%', marginTop: 16, padding: '14px',
+          borderRadius: 12, border: 'none',
+          background: 'linear-gradient(135deg, #0EA5E9, #3B82F6)',
+          color: 'white', fontSize: 13, fontWeight: 800,
+          fontFamily: 'inherit', textTransform: 'uppercase',
+          letterSpacing: '0.1em', cursor: 'pointer',
+          boxShadow: '0 0 24px rgba(14,165,233,0.3)',
+          transition: 'transform 0.15s, box-shadow 0.15s',
+        }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 36px rgba(14,165,233,0.45)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(14,165,233,0.3)'; }}
+        >
+          Unlock
+        </button>
+
+        <p style={{
+          fontSize: 10, color: '#475569', marginTop: 20,
+          fontWeight: 500,
+        }}>Need access? Contact <a href="mailto:drew@blueprintaiconsulting.com" style={{ color: '#3B82F6', textDecoration: 'none' }}>drew@blueprintaiconsulting.com</a></p>
+      </form>
+    </div>
+  );
+};
 
 
 
@@ -558,4 +694,11 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+// Wrap the app with the access gate
+const ProtectedApp: React.FC = () => (
+  <AccessGate>
+    <App />
+  </AccessGate>
+);
+
+export default ProtectedApp;
