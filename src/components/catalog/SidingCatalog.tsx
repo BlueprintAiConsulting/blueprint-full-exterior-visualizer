@@ -22,6 +22,8 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 }) => {
   const mainZone = quickZones.find(z => z.id === 'qz-main')!;
   const gableZone = quickZones.find(z => z.id === 'qz-gable');
+  const dormerZone = quickZones.find(z => z.id === 'qz-dormer');
+  const garageZone = quickZones.find(z => z.id === 'qz-garage');
 
   return (
     <div className="bg-[#111827] p-4 space-y-3">
@@ -103,6 +105,100 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
                 textureImage={gableZone.selectedLine.textureImage}
                 textureStyle={gableZone.selectedLine.textureStyle}
                 ringColor="#7C3AED"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dormer accent zone */}
+      {dormerZone && (
+        <div className="pt-3 border-t border-[#1E293B]">
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-dormer' ? { ...z, enabled: !z.enabled } : z))}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${dormerZone.enabled ? 'bg-[#3B82F6]' : 'bg-[#1E293B] border border-[#334155]'}`}
+            >
+              <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${dormerZone.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+            </button>
+            <span className={`text-xs font-bold transition-colors ${dormerZone.enabled ? 'text-[#E2E8F0]' : 'text-[#475569]'}`}>Dormer</span>
+            <span className="text-[9px] text-[#475569] ml-auto">optional</span>
+          </div>
+
+          {dormerZone.enabled && (
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-1 mb-2">
+                {SIDING_OPTIONS.map(line => (
+                  <button 
+                    key={line.tier}
+                    onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-dormer' ? { ...z, selectedLine: line, selectedColor: line.colors[0] } : z))}
+                    className={`py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                      dormerZone.selectedLine.tier === line.tier ? 'bg-[#A855F7] text-white' : 'bg-[#1E293B] text-[#64748B] hover:text-[#94A3B8]'
+                    }`}
+                  >
+                    {line.tier}
+                  </button>
+                ))}
+              </div>
+
+              <ColorGrid 
+                colors={dormerZone.selectedLine.colors}
+                selectedColorId={dormerZone.selectedColor.id}
+                onSelect={(c) => setQuickZones(prev => prev.map(z => z.id === 'qz-dormer' ? { ...z, selectedColor: c as any } : z))}
+                onMouseEnter={onColorMouseEnter}
+                onMouseLeave={onColorMouseLeave}
+                isExpanded={expandedZoneId === 'qz-dormer'}
+                onToggleExpand={() => setExpandedZoneId(expandedZoneId === 'qz-dormer' ? null : 'qz-dormer')}
+                textureImage={dormerZone.selectedLine.textureImage}
+                textureStyle={dormerZone.selectedLine.textureStyle}
+                ringColor="#A855F7"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Garage zone */}
+      {garageZone && (
+        <div className="pt-3 border-t border-[#1E293B]">
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-garage' ? { ...z, enabled: !z.enabled } : z))}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${garageZone.enabled ? 'bg-[#3B82F6]' : 'bg-[#1E293B] border border-[#334155]'}`}
+            >
+              <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${garageZone.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+            </button>
+            <span className={`text-xs font-bold transition-colors ${garageZone.enabled ? 'text-[#E2E8F0]' : 'text-[#475569]'}`}>Garage</span>
+            <span className="text-[9px] text-[#475569] ml-auto">optional</span>
+          </div>
+
+          {garageZone.enabled && (
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-1 mb-2">
+                {SIDING_OPTIONS.map(line => (
+                  <button 
+                    key={line.tier}
+                    onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-garage' ? { ...z, selectedLine: line, selectedColor: line.colors[0] } : z))}
+                    className={`py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                      garageZone.selectedLine.tier === line.tier ? 'bg-[#0EA5E9] text-white' : 'bg-[#1E293B] text-[#64748B] hover:text-[#94A3B8]'
+                    }`}
+                  >
+                    {line.tier}
+                  </button>
+                ))}
+              </div>
+
+              <ColorGrid 
+                colors={garageZone.selectedLine.colors}
+                selectedColorId={garageZone.selectedColor.id}
+                onSelect={(c) => setQuickZones(prev => prev.map(z => z.id === 'qz-garage' ? { ...z, selectedColor: c as any } : z))}
+                onMouseEnter={onColorMouseEnter}
+                onMouseLeave={onColorMouseLeave}
+                isExpanded={expandedZoneId === 'qz-garage'}
+                onToggleExpand={() => setExpandedZoneId(expandedZoneId === 'qz-garage' ? null : 'qz-garage')}
+                textureImage={garageZone.selectedLine.textureImage}
+                textureStyle={garageZone.selectedLine.textureStyle}
+                ringColor="#0EA5E9"
               />
             </div>
           )}

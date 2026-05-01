@@ -150,7 +150,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Architectural Shingles',
     materialType: 'Architectural Shingles',
     profileLabel: 'Lifetime Laminate — Dimensional Profile',
-    textureImage: '/textures/roof-architectural.bmp',
+    textureImage: '',
     textureStyle: 'architectural',
     description: 'Industry-standard dimensional shingle — 14 colors.',
     colors: [
@@ -175,7 +175,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Designer Shingles',
     materialType: 'Designer Architectural Shingles',
     profileLabel: 'High-Definition — Maximum Dimension',
-    textureImage: '/textures/roof-designer.bmp',
+    textureImage: '',
     textureStyle: 'designer',
     description: 'Premium high-contrast laminate with ultra-HD dimension — 8 colors.',
     colors: [
@@ -194,7 +194,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Standing Seam Metal',
     materialType: 'Standing Seam Metal Roof',
     profileLabel: 'Vertical Panel — Concealed Fastener',
-    textureImage: '/textures/roof-storm.bmp',
+    textureImage: '',
     textureStyle: 'metal',
     description: 'Premium standing seam metal roofing — 10 colors.',
     colors: [
@@ -234,6 +234,8 @@ export const DEFAULT_QUICK_ROOF_ZONES: QuickRoofZone[] = [
 export const DEFAULT_QUICK_ZONES: QuickZone[] = [
   { id: 'qz-main',     name: 'Main Body',   enabled: true,  selectedLine: SIDING_OPTIONS[0], selectedColor: SIDING_OPTIONS[0].colors[0] },
   { id: 'qz-gable',    name: 'Upper Gable', enabled: false, selectedLine: SIDING_OPTIONS[2], selectedColor: SIDING_OPTIONS[2].colors[0] },
+  { id: 'qz-dormer',   name: 'Dormer',      enabled: false, selectedLine: SIDING_OPTIONS[2], selectedColor: SIDING_OPTIONS[2].colors[3] },
   { id: 'qz-trim',     name: 'Trim',        enabled: false, selectedLine: SIDING_OPTIONS[0], selectedColor: TRIM_COLORS[0] },
   { id: 'qz-shutters', name: 'Shutters',    enabled: false, selectedLine: SIDING_OPTIONS[0], selectedColor: SHUTTER_COLORS[0] },
+  { id: 'qz-garage',   name: 'Garage',      enabled: false, selectedLine: SIDING_OPTIONS[0], selectedColor: SIDING_OPTIONS[0].colors[1] },
 ];
