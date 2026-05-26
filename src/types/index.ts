@@ -12,7 +12,7 @@ export interface SidingLine {
   description: string;
   profileLabel: string;
   textureImage: string;
-  textureStyle: 'horizontal-lap' | 'dutch-lap' | 'vertical-panel' | 'rustic-shingle';
+  textureStyle: 'horizontal-lap' | 'dutch-lap' | 'board-batten' | 'shake';
   colors: SidingColor[];
   style?: 'horizontal' | 'vertical';
 }
@@ -61,7 +61,7 @@ export interface QuickRoofZone {
   selectedColor: RoofingColor;
 }
 
-export type TextureStyleKey = 'horizontal-lap' | 'dutch-lap' | 'vertical-panel' | 'rustic-shingle' | 'architectural' | 'designer' | 'metal';
+export type TextureStyleKey = 'horizontal-lap' | 'dutch-lap' | 'board-batten' | 'shake' | 'architectural' | 'designer' | 'metal';
 
 export interface QuickZoneData {
   name: string;

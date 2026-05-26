@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "blueprint-envision"
+  },
+  "targets": {
+    "blueprint-envision": {
+      "hosting": {
+        "blueprint": [
+          "blueprint-envision"
+        ],
+        "jz": [
+          "jz-construction-visualizer"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

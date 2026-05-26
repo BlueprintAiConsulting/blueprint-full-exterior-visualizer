@@ -7,9 +7,7 @@ export default defineConfig(({ command }) => {
   const isProd = command === 'build';
 
   return {
-    // Only use the subpath base for production (GitHub Pages).
-    // In dev, serve from root so URLs are just localhost:5173/
-    base: isProd ? '/blueprint-full-exterior-visualizer/' : '/',
+    base: '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

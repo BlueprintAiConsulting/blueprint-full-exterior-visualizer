@@ -10,6 +10,7 @@ interface SidingCatalogProps {
   setExpandedZoneId: (id: string | null) => void;
   onColorMouseEnter: (color: SidingColor) => void;
   onColorMouseLeave: () => void;
+  detectedZones: string[];
 }
 
 const SidingCatalog: React.FC<SidingCatalogProps> = ({
@@ -18,7 +19,8 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
   expandedZoneId,
   setExpandedZoneId,
   onColorMouseEnter,
-  onColorMouseLeave
+  onColorMouseLeave,
+  detectedZones
 }) => {
   const mainZone = quickZones.find(z => z.id === 'qz-main')!;
   const gableZone = quickZones.find(z => z.id === 'qz-gable');
@@ -27,12 +29,12 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 
   return (
     <div className="bg-[#111827] p-4 space-y-3">
-      {/* 3-column style picker */}
-      <div className="grid grid-cols-3 gap-1.5 bg-[#060B18] p-1 rounded-lg">
+      {/* 4-column style picker */}
+      <div className="grid grid-cols-4 gap-1 bg-[#060B18] p-1 rounded-lg">
         {SIDING_OPTIONS.map(line => (
           <button 
             key={line.tier}
-            onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-main' ? { ...z, selectedLine: line, selectedColor: line.colors[0] } : z))}
+            onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-main' ? { ...z, selectedLine: line, selectedColor: line.colors[0], enabled: true } : z))}
             className={`py-2.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all duration-150 ${
               mainZone.selectedLine.tier === line.tier 
                 ? 'bg-[#1E3A8A] text-[#60A5FA] shadow-md shadow-blue-500/10' 
@@ -54,7 +56,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
       <ColorGrid 
         colors={mainZone.selectedLine.colors}
         selectedColorId={mainZone.selectedColor.id}
-        onSelect={(c) => setQuickZones(prev => prev.map(z => z.id === 'qz-main' ? { ...z, selectedColor: c as any } : z))}
+        onSelect={(c) => setQuickZones(prev => prev.map(z => z.id === 'qz-main' ? { ...z, selectedColor: c as any, enabled: true } : z))}
         onMouseEnter={onColorMouseEnter}
         onMouseLeave={onColorMouseLeave}
         isExpanded={expandedZoneId === 'qz-main'}
@@ -64,7 +66,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
       />
 
       {/* Upper Gable accent zone */}
-      {gableZone && (
+      {gableZone && detectedZones.includes('qz-gable') && (
         <div className="pt-3 border-t border-[#1E293B]">
           <div className="flex items-center gap-2 mb-2">
             <button
@@ -79,9 +81,9 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 
           {gableZone.enabled && (
             <div className="space-y-2">
-              {/* Gable style picker — only Rustic Shingle and Vertical Panel make sense as accents */}
+              {/* Gable style picker — only Cedar Impressions and CedarBoards make sense as accents */}
               <div className="grid grid-cols-2 gap-1 mb-2">
-                {[SIDING_OPTIONS[1], SIDING_OPTIONS[2]].map(line => (
+                {[SIDING_OPTIONS[2], SIDING_OPTIONS[3]].map(line => (
                   <button 
                     key={line.tier}
                     onClick={() => setQuickZones(prev => prev.map(z => z.id === 'qz-gable' ? { ...z, selectedLine: line, selectedColor: line.colors[0] } : z))}
@@ -112,7 +114,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
       )}
 
       {/* Dormer accent zone */}
-      {dormerZone && (
+      {dormerZone && detectedZones.includes('qz-dormer') && (
         <div className="pt-3 border-t border-[#1E293B]">
           <div className="flex items-center gap-2 mb-2">
             <button
@@ -127,7 +129,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 
           {dormerZone.enabled && (
             <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-1 mb-2">
+              <div className="grid grid-cols-4 gap-1 mb-2">
                 {SIDING_OPTIONS.map(line => (
                   <button 
                     key={line.tier}
@@ -159,7 +161,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
       )}
 
       {/* Garage zone */}
-      {garageZone && (
+      {garageZone && detectedZones.includes('qz-garage') && (
         <div className="pt-3 border-t border-[#1E293B]">
           <div className="flex items-center gap-2 mb-2">
             <button
@@ -174,7 +176,7 @@ const SidingCatalog: React.FC<SidingCatalogProps> = ({
 
           {garageZone.enabled && (
             <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-1 mb-2">
+              <div className="grid grid-cols-4 gap-1 mb-2">
                 {SIDING_OPTIONS.map(line => (
                   <button 
                     key={line.tier}

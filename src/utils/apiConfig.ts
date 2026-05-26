@@ -1,9 +1,8 @@
 /**
  * API Base URL Configuration
  *
- * In development: empty string — Vite's dev proxy forwards /api/* to localhost:3000
- * In production (GitHub Pages): the full Render backend URL
- *
- * Set via VITE_API_BASE_URL env var at build time (see .github/workflows/deploy.yml).
+ * Under Firebase Hosting, we use relative paths (empty string) because
+ * firebase.json handles routing /api/** to Cloud Functions on the same origin.
  */
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+export const API_BASE = '';
+

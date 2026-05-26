@@ -188,6 +188,8 @@ const App: React.FC = () => {
   const [quickRoofZones, setQuickRoofZones] = useState<QuickRoofZone[]>(DEFAULT_QUICK_ROOF_ZONES);
   const [expandedRoofZoneId, setExpandedRoofZoneId] = useState<string | null>(null);
   const [expandedZoneId, setExpandedZoneId] = useState<string | null>(null);
+  const [detectedZones, setDetectedZones] = useState<string[]>(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+  const [isDetecting, setIsDetecting] = useState(false);
   
   // --- UI & CANVAS STATE ---
   const [sliderPos, setSliderPos] = useState(100);
@@ -233,7 +235,83 @@ const App: React.FC = () => {
       .catch(() => {}); // Silently fail if asset missing
   }, []);
 
+  // Run background AI detection whenever the active image changes
+  useEffect(() => {
+    if (!selectedImage) return;
 
+    const urlLower = selectedImage.toLowerCase();
+    
+    // Quick, zero-latency defaults for demo images to avoid redundant API hits and look instant
+    if (urlLower.includes('demo-pa-colonial.png')) {
+      setDetectedZones(['qz-main', 'qz-gable', 'qz-shutters', 'qz-trim']);
+      return;
+    } else if (urlLower.includes('demo-pa-ranch.png')) {
+      setDetectedZones(['qz-main', 'qz-trim', 'qz-garage']);
+      return;
+    } else if (urlLower.includes('demo-pa-cape-cod.png')) {
+      setDetectedZones(['qz-main', 'qz-dormer', 'qz-trim', 'qz-shutters']);
+      return;
+    } else if (
+      urlLower.includes('demo-pa-bi-level.png') || 
+      urlLower.includes('demo-pa-split-level.png') || 
+      urlLower.includes('demo-pa-two-story.png')
+    ) {
+      setDetectedZones(['qz-main', 'qz-trim', 'qz-garage', 'qz-gable']);
+      return;
+    }
+
+    // For custom user uploaded photos, run parallel queries to detect siding and roofing zones
+    const detectHouseFeatures = async () => {
+      setIsDetecting(true);
+      try {
+        const base64 = selectedImage.split(',')[1];
+        const mime = selectedImage.split(';')[0].split(':')[1] || 'image/jpeg';
+
+        const [sidingRes, roofRes] = await Promise.all([
+          fetch(`${API_BASE}/api/detect-sections`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: base64, mimeType: mime }),
+          }),
+          fetch(`${API_BASE}/api/roof-detect-sections`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: base64, mimeType: mime }),
+          }),
+        ]);
+
+        const zonesList = ['qz-main'];
+
+        if (sidingRes.ok) {
+          const sidingData = await sidingRes.json();
+          const names = [
+            ...(sidingData.sections || []).map((s: any) => s.name.toLowerCase()),
+            ...(sidingData.optionalSections || []).map((s: any) => s.name.toLowerCase()),
+          ];
+
+          if (names.some((n) => n.includes('gable'))) zonesList.push('qz-gable');
+          if (names.some((n) => n.includes('dormer'))) zonesList.push('qz-dormer');
+          if (names.some((n) => n.includes('garage'))) zonesList.push('qz-garage');
+          if (names.some((n) => n.includes('shutter'))) zonesList.push('qz-shutters');
+          if (names.some((n) => n.includes('trim') || n.includes('corner'))) zonesList.push('qz-trim');
+        }
+
+        // Apply detected list if we got valid responses, otherwise fallback to show all
+        if (zonesList.length > 1) {
+          setDetectedZones(zonesList);
+        } else {
+          setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+        }
+      } catch (err) {
+        console.error('Section detection failed:', err);
+        setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+      } finally {
+        setIsDetecting(false);
+      }
+    };
+
+    detectHouseFeatures();
+  }, [selectedImage]);
 
   // --- HANDLERS ---
   const handleUpload = async (file: File) => {
@@ -264,6 +342,7 @@ const App: React.FC = () => {
     setShowEnhancePrompt(false);
     setQuickZones(DEFAULT_QUICK_ZONES);
     setQuickRoofZones(DEFAULT_QUICK_ROOF_ZONES);
+    setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
     setImageOptimizeInfo(null);
     zoomPan.resetView();
   };
@@ -274,8 +353,12 @@ const App: React.FC = () => {
     setActivePanel(prev => prev === panel ? null : panel);
   };
 
-  const hasRoofChanges = quickRoofZones.some(z => z.enabled || z.id === 'rz-main');
-  const hasSidingChanges = quickZones.some(z => z.enabled);
+  const rawRoofChanges = quickRoofZones.some(z => z.enabled);
+  const rawSidingChanges = quickZones.some(z => z.enabled);
+
+  // If the user hasn't selected anything yet, default to the currently active panel
+  const hasRoofChanges = rawRoofChanges || (!rawRoofChanges && !rawSidingChanges && activePanel === 'roof');
+  const hasSidingChanges = rawSidingChanges || (!rawRoofChanges && !rawSidingChanges && activePanel === 'siding');
 
   const handleGenerate = async () => {
     if (!selectedImage) return;
@@ -319,7 +402,7 @@ const App: React.FC = () => {
         if (hasSidingChanges) {
           setRenderPhase('siding');
           const sidingZonesPayload = quickZones
-            .filter(z => z.enabled || z.id === 'qz-main')
+            .filter(z => (z.enabled || z.id === 'qz-main') && detectedZones.includes(z.id))
             .map(z => ({
               name: z.name,
               lineName: z.selectedLine.line,
@@ -494,6 +577,7 @@ const App: React.FC = () => {
                         setExpandedZoneId={setExpandedZoneId}
                         onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(null); setSwatchPreviewTextureStyle(quickZones.find(z => z.id === 'qz-main')?.selectedLine.textureStyle || null); }}
                         onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); setSwatchPreviewTextureStyle(null); }}
+                        detectedZones={detectedZones}
                       />
                     </div>
                   )}
@@ -533,7 +617,7 @@ const App: React.FC = () => {
                   </button>
                   {activePanel === 'accents' && (
                     <div className="border-t border-[#1E293B] bg-[#111827] p-4 space-y-2">
-                      {quickZones.filter(z => ['qz-shutters', 'qz-trim'].includes(z.id)).map((zone) => {
+                      {quickZones.filter(z => ['qz-shutters', 'qz-trim'].includes(z.id) && detectedZones.includes(z.id)).map((zone) => {
                         const palette = zone.id === 'qz-shutters' ? SHUTTER_COLORS : TRIM_COLORS;
                         const paletteLabel = zone.id === 'qz-shutters' ? 'Shutter Colors' : 'Trim Colors';
                         const isExpanded = expandedZoneId === zone.id;
@@ -597,6 +681,13 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {ai.error && (
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 text-xs font-medium space-y-1">
+                    <p className="font-bold text-red-500 uppercase tracking-widest text-[10px]">Visualization Error</p>
+                    <p className="text-red-300/90 leading-relaxed">{ai.error}</p>
+                  </div>
+                )}
               </div>
             }
 
@@ -635,7 +726,16 @@ const App: React.FC = () => {
             <div className="bg-[#111827] rounded-xl border border-[#1E293B] p-1 flex flex-col shadow-2xl overflow-hidden" style={{ height: 'min(calc(100vh - 100px), 900px)', minHeight: '260px' }}>
               <div className="bg-[#0F172A] border-b border-[#1E293B] px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" /><span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Engine Active</span></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                    <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Engine Active</span>
+                  </div>
+                  {isDetecting && (
+                    <div className="flex items-center gap-1.5 animate-pulse">
+                      <Loader2 className="w-3.5 h-3.5 text-[#3B82F6] animate-spin" />
+                      <span className="text-[9px] font-bold text-[#3B82F6] uppercase tracking-widest">Analyzing house features…</span>
+                    </div>
+                  )}
                 </div>
 
               </div>

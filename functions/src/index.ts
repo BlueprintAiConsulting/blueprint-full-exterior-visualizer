@@ -1,52 +1,48 @@
-/**
- * Blueprint AI — API Proxy Server
- *
- * Holds the GEMINI_API_KEY server-side so it is never exposed in the
- * client bundle. The frontend calls /api/* and this server forwards the
- * requests to the Gemini API.
- */
-
+import { onRequest } from 'firebase-functions/v2/https';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
 
-dotenv.config();
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.set('trust proxy', true);
 
-// SECURITY NOTE: 'trust proxy' 1 relies on Render's proxy to correctly supply client IPs for the rate limiter.
-// If this architecture expands to place a CDN (like Cloudflare) IN FRONT of Render, this value MUST 
-// be increased to 'trust proxy', 2 (or higher) relative to the proxy depth to prevent IP-spoofed rate limit bypass.
-app.set('trust proxy', 1);
-
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'https://blueprint-exterior-visualizer.onrender.com',
-  'https://blueprintaiconsulting.github.io'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-}));
-
+app.use(cors({ origin: true }));
 app.use(express.json({ limit: '50mb' }));
 
+// Lazy init for Gemini API client to ensure Secret Manager environment is populated
+let _ai: GoogleGenAI | null = null;
+function getAI() {
+  if (!_ai) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY environment variable is missing. Set it in Secret Manager.");
+    }
+    _ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return _ai;
+}
+
+// Lazy init for Gmail transporter
+let _gmailTransport: nodemailer.Transporter | null = null;
+let _gmailInitialized = false;
+function getGmailTransport() {
+  if (!_gmailInitialized) {
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      _gmailTransport = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
+      });
+    }
+    _gmailInitialized = true;
+  }
+  return _gmailTransport;
+}
+
+// Request logging middleware
 app.use((req, res, next) => {
   console.log(`[API REQUEST] ${req.method} ${req.url}`);
   const start = Date.now();
@@ -56,44 +52,31 @@ app.use((req, res, next) => {
   next();
 });
 
-const PORT = Number(process.env.PORT || process.env.SERVER_PORT) || 4010;
-
-if (!process.env.GEMINI_API_KEY) {
-  console.error('❌  GEMINI_API_KEY is not set. Add it to your .env file.');
-  process.exit(1);
-}
-
-// Single, server-side AI client — key never leaves the server
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// ---------------------------------------------------------------------------
-// Rate limiters to prevent quota drain and spam
-// ---------------------------------------------------------------------------
+// Rate limiters
 const generationLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 10, // Limit each IP to 10 generation requests per window
+  windowMs: 5 * 60 * 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please wait a moment before trying again.' }
 });
 
 const standardLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // 50 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests.' }
 });
 
-
-// Utility: wrap a promise with a timeout to prevent hung API calls
+// Utility: timeout wrapper
 const withTimeout = <T>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
   Promise.race([
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)),
   ]);
 
-// Utility: Server-side validation for image pre-flight checks before hitting Gemini
+// Image validation helper
 function validateImagePayload(base64: string, mime: string = '') {
   if (!base64) throw new Error('Missing imageBase64 payload');
   const rawBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
@@ -114,28 +97,22 @@ function validateImagePayload(base64: string, mime: string = '') {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/auto-mask
-// Body: { imageBase64: string, mimeType: string, maskTarget: string }
-// Returns: { maskBase64: string }
+// ENDPOINTS
 // ---------------------------------------------------------------------------
-app.post('/api/auto-mask', generationLimiter, async (req, res) => {
-  const { imageBase64, mimeType, maskTarget } = req.body as {
-    imageBase64: string;
-    mimeType: string;
-    maskTarget: string;
-  };
 
+// POST /api/auto-mask
+app.post('/api/auto-mask', generationLimiter, async (req, res) => {
+  const { imageBase64, mimeType, maskTarget } = req.body as { imageBase64: string; mimeType: string; maskTarget: string };
   if (!imageBase64 || !maskTarget) {
     return res.status(400).json({ error: 'Missing required fields: imageBase64, maskTarget.' });
   }
-
   try {
     validateImagePayload(imageBase64, mimeType);
     const targetLower = maskTarget.toLowerCase();
     const allExclusions = ['roof', 'windows', 'window frames', 'shutters', 'doors', 'garage doors', 'trim', 'gutters', 'downspouts', 'fascia', 'soffits', 'foundation', 'concrete', 'sky', 'grass', 'trees', 'plants', 'people', 'vehicles', 'shadows'];
     const activeExclusions = allExclusions.filter(e => !targetLower.includes(e));
 
-    const response = await withTimeout(ai.models.generateContent({
+    const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: {
         parts: [
@@ -162,24 +139,15 @@ CRITICAL RULES:
         break;
       }
     }
-
-    if (!maskBase64) {
-      return res.status(500).json({ error: 'No mask was generated by the AI model.' });
-    }
-
+    if (!maskBase64) return res.status(500).json({ error: 'Failed to generate mask. Please try again.' });
     res.json({ maskBase64 });
   } catch (err: any) {
     console.error('[auto-mask] error:', err?.message);
-    res.status(500).json({ error: err?.message || 'Auto-mask generation failed.' });
+    res.status(500).json({ error: err?.message || 'Auto mask generation failed.' });
   }
 });
 
-// ---------------------------------------------------------------------------
 // POST /api/quick-render
-// Body: { imageBase64, mimeType, zones: [{name, lineName, colorName, colorHex, hue}] }
-// Returns: { resultImage: string }
-// One-shot generation — no masks required, ~45s total.
-// ---------------------------------------------------------------------------
 type TextureStyleKey = 'horizontal-lap' | 'dutch-lap' | 'board-batten' | 'shake';
 interface QuickZoneData { name: string; lineName: string; colorName: string; colorHex: string; hue: string; style?: 'horizontal' | 'vertical'; textureStyle?: TextureStyleKey; }
 
@@ -221,10 +189,10 @@ app.post('/api/quick-render', generationLimiter, async (req, res) => {
 2. NEGATIVE CONSTRAINTS: DO NOT add, remove, or modify ${exclusions.join(', ')}. Leave them 100% untouched.
 3. RENOVATION SURFACES: If the house exterior contains brick, stone, masonry, stucco, or EIFS/synthetic stucco walls, treat them as viable siding surfaces for this renovation visualization — apply the selected siding product naturally over those wall areas as if new siding is being installed. Only preserve these materials on decorative accents, chimneys, or foundation bases that are clearly not part of the main wall cladding.
 4. SCALE: The siding board width must accurately match the scale of the house in the photograph.${hasVerticalZones ? '\n5. VERTICAL SIDING: For zones marked [VERTICAL STYLE], render siding as distinct vertical boards (and narrow battens if Board & Batten style) running from top to bottom of each wall section. Do NOT render horizontal laps on these zones.' : ''}
-${hasVerticalZones ? '6' : '5'}. LIGHTING: Keep the exact same sunlight, shadows, and lighting direction as the original photo.
-${hasVerticalZones ? '7' : '6'}. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
+5. LIGHTING: Keep the exact same sunlight, shadows, and lighting direction as the original photo.
+6. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
 
-    const response = await withTimeout(ai.models.generateContent({
+    const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: { parts: [{ inlineData: { data: imageBase64, mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
     }), 90_000, 'quick-render');
@@ -246,11 +214,7 @@ ${hasVerticalZones ? '7' : '6'}. PHOTOREALISM: The result must be pristine and p
   }
 });
 
-// ---------------------------------------------------------------------------
 // POST /api/generate
-// Body: { imageBase64, sections, lightingCondition, isHighQuality, imageSize }
-// Returns: { resultImage: string }
-// ---------------------------------------------------------------------------
 interface SectionData {
   id: string;
   name: string;
@@ -269,18 +233,12 @@ app.post('/api/generate', generationLimiter, async (req, res) => {
     imageSize: string;
     mimeType?: string;
   };
-
   if (!imageBase64 || !sections?.length) {
     return res.status(400).json({ error: 'Missing required fields: imageBase64, sections.' });
   }
-
   try {
     validateImagePayload(imageBase64, srcMimeType);
-    // Build parts array — source image first
-    const parts: any[] = [
-      { inlineData: { data: imageBase64, mimeType: srcMimeType || 'image/jpeg' } },
-    ];
-
+    const parts: any[] = [{ inlineData: { data: imageBase64, mimeType: srcMimeType || 'image/jpeg' } }];
     let promptText = `You are an expert architectural visualizer. Modify this house image according to the following section specifications:`;
 
     sections.forEach((section, index) => {
@@ -304,65 +262,35 @@ app.post('/api/generate', generationLimiter, async (req, res) => {
 
     parts.push({ text: promptText });
 
-    // Standardizing on the proper experimental image generation endpoint
-    const modelName = 'gemini-3.1-flash-image-preview';
-
-    const response = await withTimeout(ai.models.generateContent({
-      model: modelName,
+    const response = await withTimeout(getAI().models.generateContent({
+      model: 'gemini-3.1-flash-image-preview',
       contents: { parts },
     }), 120_000, 'generate');
 
     let resultImage: string | null = null;
     for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        resultImage = `data:image/png;base64,${part.inlineData.data}`;
-        break;
-      }
+      if (part.inlineData) { resultImage = `data:image/png;base64,${part.inlineData.data}`; break; }
     }
-
-    if (!resultImage) {
-      return res.status(500).json({ error: 'Failed to generate the visualized image. Please try again.' });
-    }
-
+    if (!resultImage) return res.status(500).json({ error: 'Failed to generate the visualized image. Please try again.' });
     res.json({ resultImage });
   } catch (err: any) {
     console.error('[generate] error:', err?.message);
-
     let errorMessage = 'Something went wrong while processing the image. Please try again.';
     const msg = (err?.message || '').toLowerCase();
-    if (msg.includes('quota')) {
-      errorMessage = 'API quota exceeded. Please try again later.';
-    } else if (msg.includes('not found')) {
-      errorMessage = 'AI model not found. Please verify the model name configuration.';
-    } else if (msg.includes('safety')) {
-      errorMessage = 'The image was flagged by safety filters. Please try another image.';
-    } else if (err?.message) {
-      errorMessage = `Generation failed: ${err.message}`;
-    }
-
+    if (msg.includes('quota')) errorMessage = 'API quota exceeded. Please try again later.';
+    else if (msg.includes('not found')) errorMessage = 'AI model not found. Please verify the model name configuration.';
+    else if (msg.includes('safety')) errorMessage = 'The image was flagged by safety filters. Please try another image.';
+    else if (err?.message) errorMessage = `Generation failed: ${err.message}`;
     res.status(500).json({ error: errorMessage });
   }
 });
 
-// ---------------------------------------------------------------------------
 // POST /api/detect-sections
-// Body: { imageBase64: string, mimeType: string }
-// Returns: { sections: { name: string, maskTarget: string }[] }
-// Uses a text model to analyze the house and identify distinct siding zones.
-// Each zone's maskTarget is then passed to /api/auto-mask to generate its mask.
-// ---------------------------------------------------------------------------
 app.post('/api/detect-sections', async (req, res) => {
-  const { imageBase64, mimeType } = req.body as {
-    imageBase64: string;
-    mimeType: string;
-  };
-
-  if (!imageBase64) {
-    return res.status(400).json({ error: 'Missing required field: imageBase64.' });
-  }
-
+  const { imageBase64, mimeType } = req.body as { imageBase64: string; mimeType: string };
+  if (!imageBase64) return res.status(400).json({ error: 'Missing required field: imageBase64.' });
   try {
-    const response = await withTimeout(ai.models.generateContent({
+    const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: {
         parts: [
@@ -413,19 +341,14 @@ Return ONLY valid JSON - no markdown, no code fences, no explanation, matching t
     }), 30_000, 'detect-sections');
 
     const rawText = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Strip markdown code fences if present
     const cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
-    let parsed: { isResidentialHouse: boolean; sections: { name: string; maskTarget: string }[] };
+    let parsed: any;
     try {
-      // Find the first '{' and last '}' to handle potential wrap-around text
       const firstBrace = cleaned.indexOf('{');
       const lastBrace = cleaned.lastIndexOf('}');
       if (firstBrace === -1 || lastBrace === -1) throw new Error("No JSON object found");
-      const jsonString = cleaned.substring(firstBrace, lastBrace + 1);
-      
-      parsed = JSON.parse(jsonString);
+      parsed = JSON.parse(cleaned.substring(firstBrace, lastBrace + 1));
     } catch {
       console.error('[detect-sections] JSON parse error. Raw:', rawText.slice(0, 300));
       return res.status(500).json({ error: 'AI returned an invalid format. Please try a clearer image.' });
@@ -435,30 +358,26 @@ Return ONLY valid JSON - no markdown, no code fences, no explanation, matching t
       return res.status(400).json({ error: 'PREFLIGHT_FAILURE: The uploaded image does not appear to be a residential house or building suitable for siding. Please upload a clear exterior photo.' });
     }
 
-    // Filter out any front door / entry door zones the AI may have returned despite instructions
     const EXCLUDED_NAMES = ['front door', 'entry door', 'side door', 'door'];
     const OPTIONAL_NAMES = ['shutters', 'trim', 'corner boards'];
 
-    // Remove excluded zones entirely
     parsed.sections = (parsed.sections || []).filter(
-      s => !EXCLUDED_NAMES.some(ex => s.name.toLowerCase().includes(ex))
+      (s: any) => !EXCLUDED_NAMES.some(ex => s.name.toLowerCase().includes(ex))
     );
 
-    // Separate any accent zones the AI put in sections instead of optionalSections
     const primarySections = parsed.sections.filter(
-      s => !OPTIONAL_NAMES.some(opt => s.name.toLowerCase().includes(opt))
+      (s: any) => !OPTIONAL_NAMES.some(opt => s.name.toLowerCase().includes(opt))
     );
     const accentFromSections = parsed.sections.filter(
-      s => OPTIONAL_NAMES.some(opt => s.name.toLowerCase().includes(opt))
+      (s: any) => OPTIONAL_NAMES.some(opt => s.name.toLowerCase().includes(opt))
     );
 
-    // Merge with the dedicated optionalSections array (also filtering excluded names)
-    const rawOptional = (parsed as any).optionalSections || [];
+    const rawOptional = parsed.optionalSections || [];
     const filteredOptional = rawOptional.filter(
       (s: any) => !EXCLUDED_NAMES.some(ex => s.name.toLowerCase().includes(ex))
     );
     const allOptional = [...accentFromSections, ...filteredOptional];
-    // De-duplicate by name
+
     const seenOpt = new Set<string>();
     const uniqueOptional = allOptional.filter(s => {
       const key = s.name.toLowerCase();
@@ -474,28 +393,7 @@ Return ONLY valid JSON - no markdown, no code fences, no explanation, matching t
   }
 });
 
-// ---------------------------------------------------------------------------
-// Nodemailer Gmail SMTP transport
-// Set GMAIL_USER and GMAIL_APP_PASSWORD in Render env vars.
-// Generate an app password at: https://myaccount.google.com/apppasswords
-// (requires 2FA enabled on the Gmail account)
-// ---------------------------------------------------------------------------
-const gmailTransport = (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD)
-  ? nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    })
-  : null;
-if (!gmailTransport) console.warn('⚠️  GMAIL_USER/GMAIL_APP_PASSWORD not set — emails will be skipped. Leads still logged to console.');
-
-// ---------------------------------------------------------------------------
 // POST /api/quote-request
-// Accepts homeowner contact info + design spec, sends lead email to Shiloh
-// and a confirmation to the homeowner.
-// ---------------------------------------------------------------------------
 interface DesignSpec {
   mode: string;
   primaryLine?: string;
@@ -521,7 +419,6 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
 
   const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' });
 
-  // Build design spec HTML rows
   const buildDesignHtml = (spec: DesignSpec): string => {
     if (spec.mode === 'Quick') {
       return `
@@ -572,7 +469,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
   </div>
   <div style="background:#0F172A;padding:14px 28px;border-radius:0 0 12px 12px;text-align:center;color:#475569;font-size:11px">
     <p style="margin:0">Submitted via BlueprintEnvision &nbsp;·&nbsp; ${timestamp}</p>
-    <p style="margin:4px 0 0">https://blueprint-siding-visualizer.onrender.com</p>
+    <p style="margin:4px 0 0">https://blueprint-envision.web.app</p>
   </div>
 </div>
 </body></html>`;
@@ -602,19 +499,16 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
 </div>
 </body></html>`;
 
-  // Always log to console so no lead is silently lost even if email fails
   console.log(`[quote-request] New lead: ${name} <${email}> ${phone} — ${address} ${zipCode} — ${designSpec.mode} / ${designSpec.primaryLine || (designSpec.sections?.[0]?.line)} ${designSpec.primaryColor || (designSpec.sections?.[0]?.color)}`);
-
   res.json({ success: true });
 
-  // Fire emails in the background (non-blocking)
-  if (gmailTransport) {
+  const transport = getGmailTransport();
+  if (transport) {
     const FROM = `"Shiloh Roofing Visualizer" <${process.env.GMAIL_USER}>`;
     const leadRecipients = process.env.LEAD_EMAIL
       ? process.env.LEAD_EMAIL.split(',')
       : ['office@shilohroofing.com', 'fauthmike@gmail.com'];
 
-    // Build attachment from visualization image if provided
     const attachments: { filename: string; content: Buffer }[] = [];
     if (visualizationImage) {
       try {
@@ -628,8 +522,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
       }
     }
 
-    // Lead notification email
-    gmailTransport.sendMail({
+    transport.sendMail({
       from: FROM,
       to: leadRecipients.join(', '),
       subject: `🏠 New Quote Request — ${name} — ${designSpec.primaryLine || designSpec.sections?.[0]?.line} ${designSpec.primaryColor || designSpec.sections?.[0]?.color}`,
@@ -638,8 +531,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
     }).then(() => console.log(`[quote-request] Lead email sent to ${leadRecipients.join(', ')} for ${email}`))
       .catch((err: any) => console.error('[quote-request] Lead email error:', err?.message));
 
-    // Homeowner confirmation email
-    gmailTransport.sendMail({
+    transport.sendMail({
       from: FROM,
       to: email,
       subject: `Your Shiloh Roofing Visualization — We'll Be In Touch, ${name}!`,
@@ -647,28 +539,17 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
     }).then(() => console.log(`[quote-request] Confirmation email sent to ${email}`))
       .catch((err: any) => console.error('[quote-request] Confirmation email error:', err?.message));
   }
-
 });
 
-// ---------------------------------------------------------------------------
-// POST /api/enhance-image — AI Image Optimizer
-// Removes obstacles (cars, people, trees blocking facade), optimizes
-// brightness/contrast, and prepares image for best siding visualization.
-// ---------------------------------------------------------------------------
+// POST /api/enhance-image
 app.post('/api/enhance-image', generationLimiter, async (req, res) => {
-  const { imageBase64, mimeType = 'image/jpeg' } = req.body as {
-    imageBase64: string;
-    mimeType?: string;
-  };
-
+  const { imageBase64, mimeType = 'image/jpeg' } = req.body as { imageBase64: string; mimeType?: string };
   if (!imageBase64) {
-    res.status(400).json({ error: 'imageBase64 is required' });
-    return;
+    return res.status(400).json({ error: 'imageBase64 is required' });
   }
-
   try {
     validateImagePayload(imageBase64, mimeType);
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: [
         {
@@ -712,52 +593,32 @@ Output a single photorealistic, clean, well-lit home exterior photo preserving t
     let outMime = 'image/png';
 
     for (const part of parts) {
-      if ((part as { inlineData?: { data?: string; mimeType?: string } }).inlineData?.data) {
-        const id = (part as { inlineData: { data: string; mimeType?: string } }).inlineData;
-        enhancedBase64 = id.data;
-        outMime = id.mimeType ?? 'image/png';
+      if ((part as any).inlineData?.data) {
+        enhancedBase64 = (part as any).inlineData.data;
+        outMime = (part as any).inlineData.mimeType ?? 'image/png';
         break;
       }
     }
-
-    if (!enhancedBase64) {
-      res.status(500).json({ error: 'Gemini did not return an enhanced image. Try a different photo.' });
-      return;
-    }
-
+    if (!enhancedBase64) return res.status(500).json({ error: 'Gemini did not return an enhanced image. Try a different photo.' });
     res.json({ enhancedImageBase64: enhancedBase64, mimeType: outMime });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('enhance-image error:', msg);
-    res.status(500).json({ error: msg });
+  } catch (err: any) {
+    console.error('enhance-image error:', err?.message);
+    res.status(500).json({ error: err?.message || 'Enhance image failed.' });
   }
 });
 
-// ---------------------------------------------------------------------------
-// GET /api/ping — health check / keep-alive endpoint
-// Prevents Render free-tier spin-down. Hit by client every 10 min and by
-// external monitors (e.g. UptimeRobot) every 5 min.
-// ---------------------------------------------------------------------------
+// GET /api/ping
 app.get('/api/ping', (_req, res) => {
   res.json({ status: 'ok', uptime: Math.round(process.uptime()), ts: new Date().toISOString() });
 });
 
-// ===========================================================================
-//  ROOFING ENDPOINTS
-// ===========================================================================
-
-// ---------------------------------------------------------------------------
 // POST /api/roof-detect-sections
-// Identifies distinct roof planes / accent zones from a house photo.
-// Returns: { sections: [{name, maskTarget}], optionalSections: [...] }
-// ---------------------------------------------------------------------------
 app.post('/api/roof-detect-sections', generationLimiter, async (req, res) => {
   const { imageBase64, mimeType } = req.body as { imageBase64: string; mimeType: string };
   if (!imageBase64) return res.status(400).json({ error: 'Missing imageBase64.' });
-
   try {
     validateImagePayload(imageBase64, mimeType);
-    const response = await withTimeout(ai.models.generateContent({
+    const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: { parts: [
         { inlineData: { data: imageBase64, mimeType: mimeType || 'image/jpeg' } },
@@ -812,7 +673,6 @@ Return ONLY valid JSON - no markdown, no code fences, matching this schema:
     if (parsed.isResidentialHouse === false) {
       return res.status(400).json({ error: 'PREFLIGHT_FAILURE: The uploaded image does not appear to contain a residential roof. Please upload a clear exterior photo showing the roof.' });
     }
-
     res.json({ sections: parsed.sections || [], optionalSections: parsed.optionalSections || [] });
   } catch (err: any) {
     console.error('[roof-detect-sections] error:', err?.message);
@@ -820,19 +680,13 @@ Return ONLY valid JSON - no markdown, no code fences, matching this schema:
   }
 });
 
-// ---------------------------------------------------------------------------
 // POST /api/roof-quick-render
-// One-shot AI shingle/gutter replacement — no masks needed.
-// Body: { imageBase64, mimeType, zones: [{name, productName, colorName, colorHex, hue, materialType}] }
-// Returns: { resultImage: string }
-// ---------------------------------------------------------------------------
 app.post('/api/roof-quick-render', generationLimiter, async (req, res) => {
   const { imageBase64, mimeType, zones } = req.body as {
     imageBase64: string; mimeType: string;
     zones: { name: string; productName: string; colorName: string; colorHex: string; hue: string; materialType: string }[];
   };
   if (!imageBase64 || !zones?.length) return res.status(400).json({ error: 'Missing imageBase64 or zones.' });
-
   try {
     validateImagePayload(imageBase64, mimeType);
     let prompt = `You are a strict, precise roofing material-replacement engine. Replace ONLY the roof shingles and specified accent zones on this residential home.\n\nApply ONLY these changes:\n`;
@@ -847,7 +701,7 @@ app.post('/api/roof-quick-render', generationLimiter, async (req, res) => {
 5. LIGHTING: Keep the exact same sunlight direction, shadows, and lighting as the original photo.
 6. PHOTOREALISM: The result must look like a premium architectural photograph. No AI artifacts, melting edges, or blurriness.`;
 
-    const response = await withTimeout(ai.models.generateContent({
+    const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: { parts: [{ inlineData: { data: imageBase64, mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
     }), 90_000, 'roof-quick-render');
@@ -869,12 +723,7 @@ app.post('/api/roof-quick-render', generationLimiter, async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------------------
 // POST /api/roof-generate
-// Advanced multi-mask roofing material replacement.
-// Body: { imageBase64, mimeType, sections: [{id, name, maskTarget, maskData, selectedProduct, selectedColor}] }
-// Returns: { resultImage: string }
-// ---------------------------------------------------------------------------
 app.post('/api/roof-generate', generationLimiter, async (req, res) => {
   const { imageBase64, mimeType: srcMimeType, sections } = req.body as {
     imageBase64: string; mimeType?: string;
@@ -883,11 +732,9 @@ app.post('/api/roof-generate', generationLimiter, async (req, res) => {
       selectedColor: { name: string; hex: string; hue: string } }[];
   };
   if (!imageBase64 || !sections?.length) return res.status(400).json({ error: 'Missing imageBase64 or sections.' });
-
   try {
     validateImagePayload(imageBase64, srcMimeType);
     const parts: any[] = [{ inlineData: { data: imageBase64, mimeType: srcMimeType || 'image/jpeg' } }];
-
     let promptText = `You are an expert architectural roofing visualizer. Modify ONLY the roof in this house image according to these section specifications:`;
     sections.forEach((section, index) => {
       if (section.maskData) {
@@ -910,7 +757,7 @@ app.post('/api/roof-generate', generationLimiter, async (req, res) => {
 
     parts.push({ text: promptText });
 
-    const response = await withTimeout(ai.models.generateContent({
+    const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: { parts },
     }), 120_000, 'roof-generate');
@@ -932,41 +779,10 @@ app.post('/api/roof-generate', generationLimiter, async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// Serve built static files in production (NODE_ENV=production)
-// ---------------------------------------------------------------------------
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-  app.get('*', (_req, response) => {
-    response.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-}
-
-function startServer(port: number, retries = 3) {
-  const server = app.listen(port, () => {
-    console.log(`✅  BlueprintEnvision API server → http://localhost:${port}`);
-
-    // Self-ping every 14 min to prevent Render free-tier cold starts
-    const selfUrl = process.env.RENDER_EXTERNAL_URL;
-    if (selfUrl) {
-      setInterval(() => {
-        fetch(`${selfUrl}/api/ping`)
-          .then(() => console.log('🏓 keep-alive ping sent'))
-          .catch((e) => console.warn('keep-alive ping failed:', e.message));
-      }, 14 * 60 * 1000);
-      console.log(`🏓 keep-alive pinger started → ${selfUrl}/api/ping`);
-    }
-  });
-
-  server.on('error', (err: NodeJS.ErrnoException) => {
-    if (err.code === 'EADDRINUSE' && retries > 0) {
-      console.warn(`⚠️  Port ${port} in use, trying ${port + 1}...`);
-      startServer(port + 1, retries - 1);
-    } else {
-      console.error(`❌  Failed to start server:`, err.message);
-      process.exit(1);
-    }
-  });
-}
-
-startServer(PORT);
+// Export the cloud function endpoint mapping to our Express app
+export const api = onRequest({
+  cors: true,
+  secrets: ['GEMINI_API_KEY'],
+  timeoutSeconds: 120,
+  memory: '1GiB'
+}, app);

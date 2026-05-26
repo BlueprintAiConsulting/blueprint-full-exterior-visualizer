@@ -36,7 +36,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
                 setQuickRoofZones((prev) =>
                   prev.map((z) =>
                     z.id === zone.id
-                      ? { ...z, selectedLine: line, selectedColor: line.colors[0] }
+                      ? { ...z, selectedLine: line, selectedColor: line.colors[0], enabled: true }
                       : z
                   )
                 )
@@ -66,7 +66,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
         onSelect={(c) =>
           setQuickRoofZones((prev) =>
             prev.map((z) =>
-              z.id === zone.id ? { ...z, selectedColor: c as any } : z
+              z.id === zone.id ? { ...z, selectedColor: c as any, enabled: true } : z
             )
           )
         }
