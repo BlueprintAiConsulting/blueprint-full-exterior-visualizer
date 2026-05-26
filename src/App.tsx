@@ -172,6 +172,7 @@ const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const App: React.FC = () => {
   // --- CORE STATE ---
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageName, setSelectedImageName] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [quickResult, setQuickResult] = useState<string | null>(null);
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
@@ -225,6 +226,7 @@ const App: React.FC = () => {
         reader.onload = (e) => {
           const dataUrl = e.target?.result as string;
           setSelectedImage(dataUrl);
+          setSelectedImageName('demo-pa-colonial.png');
           setShowEnhancePrompt(false); // Don't prompt enhance for the default image
           const img = new Image();
           img.onload = () => setImageDimensions({ width: img.width, height: img.height });
@@ -239,7 +241,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!selectedImage) return;
 
-    const urlLower = selectedImage.toLowerCase();
+    const urlLower = (selectedImageName || '').toLowerCase();
     
     // Quick, zero-latency defaults for demo images to avoid redundant API hits and look instant
     if (urlLower.includes('demo-pa-colonial.png')) {
@@ -329,6 +331,7 @@ const App: React.FC = () => {
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       setSelectedImage(dataUrl);
+      setSelectedImageName(file.name);
       setQuickResult(null);
       setResultImage(null);
       setEnhancedImage(null);
@@ -346,6 +349,7 @@ const App: React.FC = () => {
     const hasResult = !!(quickResult || resultImage);
     if (hasResult && !confirm('Are you sure you want to start over? Your visualization will be lost.')) return;
     setSelectedImage(null);
+    setSelectedImageName(null);
     setQuickResult(null);
     setResultImage(null);
     setEnhancedImage(null);
