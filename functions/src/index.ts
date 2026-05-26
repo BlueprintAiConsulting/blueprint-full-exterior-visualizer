@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { GoogleGenAI } from '@google/genai';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
+import PDFDocument from 'pdfkit';
 
 const app = express();
 app.set('trust proxy', true);
@@ -393,7 +394,6 @@ Return ONLY valid JSON - no markdown, no code fences, no explanation, matching t
   }
 });
 
-// POST /api/quote-request
 interface DesignSpec {
   mode: string;
   primaryLine?: string;
@@ -402,6 +402,173 @@ interface DesignSpec {
   shutters?: string | null;
   trim?: string | null;
   sections?: { name: string; line: string; color: string; hex: string }[];
+  siding?: { zone: string; line: string; color: string; hex: string }[];
+}
+
+function generatePDFBuffer(spec: DesignSpec, form: any, visualizationImage?: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: 'A4', margin: 40 });
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (err) => reject(err));
+
+      const primaryColor = '#0F172A';
+      const accentColor = '#3B82F6';
+      const lightBg = '#F8FAFC';
+      const darkBorder = '#E2E8F0';
+
+      // Header Banner
+      doc.rect(0, 0, 595.28, 80).fill(primaryColor);
+      doc.fillColor('#FFFFFF')
+         .fontSize(22)
+         .font('Helvetica-Bold')
+         .text('BLUEPRINTENVISION', 40, 20, { characterSpacing: 1.5 });
+      doc.fontSize(10)
+         .font('Helvetica')
+         .fillColor('#94A3B8')
+         .text('Premium Exterior Design Specification', 40, 48);
+
+      const dateStr = new Date().toLocaleDateString('en-US', { dateStyle: 'long' });
+      doc.fontSize(9)
+         .font('Helvetica-Oblique')
+         .fillColor('#FFFFFF')
+         .text(dateStr, 480, 35, { align: 'right' });
+
+      doc.y = 110;
+
+      // Section: Customer Details
+      doc.fontSize(12)
+         .font('Helvetica-Bold')
+         .fillColor(primaryColor)
+         .text('CUSTOMER & PROPERTY DETAILS', 40, doc.y);
+
+      doc.strokeColor(accentColor).lineWidth(1.5).moveTo(40, doc.y + 14).lineTo(555, doc.y + 14).stroke();
+
+      doc.y += 24;
+      const startCol1 = 40;
+      const startCol2 = 300;
+      const textRowHeight = 16;
+
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#475569');
+      doc.text('Name:', startCol1, doc.y).font('Helvetica').fillColor('#0F172A').text(form.name, startCol1 + 50, doc.y);
+      doc.font('Helvetica-Bold').fillColor('#475569').text('Address:', startCol2, doc.y).font('Helvetica').fillColor('#0F172A').text(form.address, startCol2 + 60, doc.y);
+
+      doc.y += textRowHeight;
+      doc.font('Helvetica-Bold').fillColor('#475569').text('Email:', startCol1, doc.y).font('Helvetica').fillColor('#0F172A').text(form.email, startCol1 + 50, doc.y);
+      doc.font('Helvetica-Bold').fillColor('#475569').text('Zip Code:', startCol2, doc.y).font('Helvetica').fillColor('#0F172A').text(form.zipCode, startCol2 + 60, doc.y);
+
+      doc.y += textRowHeight;
+      doc.font('Helvetica-Bold').fillColor('#475569').text('Phone:', startCol1, doc.y).font('Helvetica').fillColor('#0F172A').text(form.phone, startCol1 + 50, doc.y);
+      doc.font('Helvetica-Bold').fillColor('#475569').text('Timeline:', startCol2, doc.y).font('Helvetica').fillColor('#0F172A').text(form.projectTimeline, startCol2 + 60, doc.y);
+
+      doc.y += 30;
+
+      // Section: Design Specifications
+      doc.fontSize(12)
+         .font('Helvetica-Bold')
+         .fillColor(primaryColor)
+         .text('SELECTED PRODUCT SPECIFICATIONS', 40, doc.y);
+      doc.strokeColor(accentColor).lineWidth(1.5).moveTo(40, doc.y + 14).lineTo(555, doc.y + 14).stroke();
+
+      doc.y += 24;
+
+      // Table Header
+      doc.rect(40, doc.y, 515, 20).fill('#E2E8F0');
+      doc.fillColor('#334155').font('Helvetica-Bold').fontSize(9);
+      doc.text('ZONE / ELEMENT', 50, doc.y + 6);
+      doc.text('PRODUCT / MATERIAL', 180, doc.y + 6);
+      doc.text('COLOR SPECIFICATION', 360, doc.y + 6);
+
+      doc.y += 20;
+
+      const items: { zone: string; product: string; color: string; hex: string }[] = [];
+
+      if (spec.sections) {
+        spec.sections.forEach(s => {
+          items.push({ zone: s.name, product: s.line, color: s.color, hex: s.hex });
+        });
+      } else if (spec.primaryLine) {
+        items.push({ zone: 'Primary Roof', product: spec.primaryLine, color: spec.primaryColor || '', hex: spec.primaryHex || '' });
+      }
+
+      if (spec.siding) {
+        spec.siding.forEach(s => {
+          items.push({ zone: s.zone, product: s.line, color: s.color, hex: s.hex });
+        });
+      }
+
+      if (spec.shutters) {
+        items.push({ zone: 'Shutters', product: 'Accent Shutter Panels', color: spec.shutters, hex: '' });
+      }
+      if (spec.trim) {
+        items.push({ zone: 'Trim', product: 'Exterior Trim Boards', color: spec.trim, hex: '' });
+      }
+
+      let alternateRow = false;
+      items.forEach(item => {
+        if (alternateRow) {
+          doc.rect(40, doc.y, 515, 22).fill(lightBg);
+        }
+        doc.fillColor('#0F172A').font('Helvetica').fontSize(9);
+        
+        doc.font('Helvetica-Bold').text(item.zone, 50, doc.y + 6);
+        doc.font('Helvetica').text(item.product, 180, doc.y + 6, { width: 170, height: 16, ellipsis: true });
+        
+        if (item.hex) {
+          doc.save();
+          doc.fillColor(item.hex).lineWidth(1).strokeColor('#CCCCCC');
+          doc.circle(368, doc.y + 10, 5).fillAndStroke();
+          doc.restore();
+          doc.fillColor('#0F172A').text(item.color, 380, doc.y + 6);
+        } else {
+          doc.fillColor('#0F172A').text(item.color, 360, doc.y + 6);
+        }
+
+        doc.y += 22;
+        alternateRow = !alternateRow;
+      });
+
+      doc.strokeColor(darkBorder).lineWidth(1).moveTo(40, doc.y).lineTo(555, doc.y).stroke();
+
+      doc.y += 24;
+
+      if (visualizationImage) {
+        try {
+          const rawBase64 = visualizationImage.includes(',') ? visualizationImage.split(',')[1] : visualizationImage;
+          const imgBuffer = Buffer.from(rawBase64, 'base64');
+          
+          if (doc.y > 500) {
+            doc.addPage();
+            doc.y = 40;
+          }
+
+          doc.fontSize(12)
+             .font('Helvetica-Bold')
+             .fillColor(primaryColor)
+             .text('DESIGN VISUALIZATION PREVIEW', 40, doc.y);
+          doc.strokeColor(accentColor).lineWidth(1.5).moveTo(40, doc.y + 14).lineTo(555, doc.y + 14).stroke();
+          
+          doc.y += 24;
+          doc.image(imgBuffer, 40, doc.y, { fit: [515, 230], align: 'center' });
+        } catch (imgErr) {
+          console.warn('Failed to embed visualization image in PDF Spec:', imgErr);
+        }
+      }
+
+      const footerY = doc.page.height - 50;
+      doc.strokeColor(darkBorder).lineWidth(1).moveTo(40, footerY - 10).lineTo(555, footerY - 10).stroke();
+      doc.fontSize(7.5)
+         .font('Helvetica-Oblique')
+         .fillColor('#94A3B8')
+         .text('Disclaimer: Colors shown on this digital specification sheet are approximations. Physical product samples must be used as the final reference for construction and installation.', 40, footerY, { width: 515, align: 'center' });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 app.post('/api/quote-request', standardLimiter, async (req, res) => {
@@ -420,16 +587,16 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
   const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' });
 
   const buildDesignHtml = (spec: DesignSpec): string => {
-    if (spec.mode === 'Quick') {
-      return `
-        <tr><td style="padding:6px 0;color:#64748B;width:140px">Primary Siding</td>
-          <td><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${spec.primaryHex};vertical-align:middle;margin-right:6px"></span>
-          <strong>${spec.primaryLine}</strong> — ${spec.primaryColor}</td></tr>
-        ${spec.shutters ? `<tr><td style="padding:6px 0;color:#64748B">Shutters</td><td>${spec.shutters}</td></tr>` : ''}
-        ${spec.trim ? `<tr><td style="padding:6px 0;color:#64748B">Trim</td><td>${spec.trim}</td></tr>` : ''}
-      `;
+    const list: { name: string; line: string; color: string; hex: string }[] = [];
+    if (spec.sections) {
+      spec.sections.forEach(s => list.push({ name: s.name, line: s.line, color: s.color, hex: s.hex }));
+    } else if (spec.primaryLine) {
+      list.push({ name: 'Primary Siding', line: spec.primaryLine, color: spec.primaryColor || '', hex: spec.primaryHex || '' });
     }
-    return (spec.sections || []).map(s => `
+    if (spec.siding) {
+      spec.siding.forEach(s => list.push({ name: s.zone, line: s.line, color: s.color, hex: s.hex }));
+    }
+    return list.map(s => `
       <tr><td style="padding:6px 0;color:#64748B;width:140px">${s.name}</td>
         <td><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${s.hex};vertical-align:middle;margin-right:6px"></span>
         <strong>${s.line}</strong> — ${s.color}</td></tr>
@@ -460,12 +627,12 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
       <tr><td style="padding:6px 0;color:#64748B">Found Us Via</td><td>${referralSource}</td></tr>
     </table>
     ${notes ? `<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:12px;margin-bottom:22px;font-size:14px;color:#334155;font-style:italic">&ldquo;${notes}&rdquo;</div>` : ''}
-    <h3 style="color:#1E293B;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px">Visualized Design — ${designSpec.mode} Mode</h3>
+    <h3 style="color:#1E293B;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px">Visualized Design — ${designSpec.mode}</h3>
     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;margin-bottom:22px">
       <table style="width:100%;border-collapse:collapse">${buildDesignHtml(designSpec)}</table>
     </div>
     <a href="mailto:${email}?subject=Re%3A%20Your%20BlueprintEnvision%20Quote%20Request" style="display:inline-block;background:#3B82F6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px">Reply to ${name} →</a>
-    ${visualizationImage ? '<div style="margin-top:22px;padding-top:18px;border-top:1px solid #E2E8F0"><p style="color:#475569;font-size:12px;margin:0 0 8px">📎 <strong>Visualization image attached</strong> — see the homeowner\'s rendered design below.</p></div>' : ''}
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid #E2E8F0"><p style="color:#475569;font-size:12px;margin:0 0 8px">📎 <strong>PDF design spec sheet attached</strong> — see details in the attached files.</p></div>
   </div>
   <div style="background:#0F172A;padding:14px 28px;border-radius:0 0 12px 12px;text-align:center;color:#475569;font-size:11px">
     <p style="margin:0">Submitted via BlueprintEnvision &nbsp;·&nbsp; ${timestamp}</p>
@@ -489,6 +656,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
       <h3 style="margin:0 0 10px;color:#1E293B;font-size:13px;text-transform:uppercase;letter-spacing:1px">Your Selected Design</h3>
       <table style="width:100%;border-collapse:collapse">${buildDesignHtml(designSpec)}</table>
     </div>
+    <p style="color:#64748B;font-size:13px">We have attached your customized <strong>CertainTeed Design Spec Sheet</strong> PDF to this email for your records.</p>
     <p style="color:#64748B;font-size:13px">Questions? You can reach us directly at <a href="mailto:office@shilohroofing.com" style="color:#3B82F6">office@shilohroofing.com</a></p>
   </div>
   <div style="background:#0F172A;padding:14px 28px;border-radius:0 0 12px 12px;text-align:center;color:#475569;font-size:11px">
@@ -509,7 +677,23 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
       ? process.env.LEAD_EMAIL.split(',')
       : ['office@shilohroofing.com', 'fauthmike@gmail.com'];
 
+    // Generate the spec PDF sheet
+    let pdfBuffer: Buffer | null = null;
+    try {
+      pdfBuffer = await generatePDFBuffer(designSpec, req.body, visualizationImage);
+    } catch (pdfErr: any) {
+      console.error('[quote-request] PDF generation failed:', pdfErr?.message);
+    }
+
     const attachments: { filename: string; content: Buffer }[] = [];
+    
+    if (pdfBuffer) {
+      attachments.push({
+        filename: `${name.replace(/\s+/g, '-')}-design-spec.pdf`,
+        content: pdfBuffer,
+      });
+    }
+
     if (visualizationImage) {
       try {
         const rawBase64 = visualizationImage.includes(',') ? visualizationImage.split(',')[1] : visualizationImage;
@@ -534,8 +718,9 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
     transport.sendMail({
       from: FROM,
       to: email,
-      subject: `Your Shiloh Roofing Visualization — We'll Be In Touch, ${name}!`,
+      subject: `Your Shiloh Roofing Visualization Spec Sheet — We'll Be In Touch, ${name}!`,
       html: confirmEmailHtml,
+      attachments,
     }).then(() => console.log(`[quote-request] Confirmation email sent to ${email}`))
       .catch((err: any) => console.error('[quote-request] Confirmation email error:', err?.message));
   }

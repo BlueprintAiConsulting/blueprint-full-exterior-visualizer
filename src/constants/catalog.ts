@@ -285,6 +285,7 @@ export const GUTTER_COLORS: RoofingColor[] = [
 // ===========================================================================
 export const DEFAULT_QUICK_ROOF_ZONES: QuickRoofZone[] = [
   { id: 'rz-main', name: 'Roof', enabled: false, selectedLine: ROOFING_OPTIONS[0], selectedColor: ROOFING_OPTIONS[0].colors[0] },
+  { id: 'rz-gutters', name: 'Gutters', enabled: false, selectedLine: { tier: 'Standard', line: 'Seamless Gutters', materialType: 'Seamless Aluminum Gutters', profileLabel: '5" K-Style / 6" K-Style', textureImage: '', textureStyle: 'metal', description: 'Standard aluminum gutters', colors: GUTTER_COLORS } as any, selectedColor: GUTTER_COLORS[0] },
 ];
 
 export const DEFAULT_QUICK_ZONES: QuickZone[] = [

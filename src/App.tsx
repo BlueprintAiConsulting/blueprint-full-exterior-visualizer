@@ -188,7 +188,7 @@ const App: React.FC = () => {
   const [quickRoofZones, setQuickRoofZones] = useState<QuickRoofZone[]>(DEFAULT_QUICK_ROOF_ZONES);
   const [expandedRoofZoneId, setExpandedRoofZoneId] = useState<string | null>(null);
   const [expandedZoneId, setExpandedZoneId] = useState<string | null>(null);
-  const [detectedZones, setDetectedZones] = useState<string[]>(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+  const [detectedZones, setDetectedZones] = useState<string[]>(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage', 'rz-gutters']);
   const [isDetecting, setIsDetecting] = useState(false);
   
   // --- UI & CANVAS STATE ---
@@ -243,20 +243,20 @@ const App: React.FC = () => {
     
     // Quick, zero-latency defaults for demo images to avoid redundant API hits and look instant
     if (urlLower.includes('demo-pa-colonial.png')) {
-      setDetectedZones(['qz-main', 'qz-gable', 'qz-shutters', 'qz-trim']);
+      setDetectedZones(['qz-main', 'qz-gable', 'qz-shutters', 'qz-trim', 'rz-gutters']);
       return;
     } else if (urlLower.includes('demo-pa-ranch.png')) {
-      setDetectedZones(['qz-main', 'qz-trim', 'qz-garage']);
+      setDetectedZones(['qz-main', 'qz-trim', 'qz-garage', 'rz-gutters']);
       return;
     } else if (urlLower.includes('demo-pa-cape-cod.png')) {
-      setDetectedZones(['qz-main', 'qz-dormer', 'qz-trim', 'qz-shutters']);
+      setDetectedZones(['qz-main', 'qz-dormer', 'qz-trim', 'qz-shutters', 'rz-gutters']);
       return;
     } else if (
       urlLower.includes('demo-pa-bi-level.png') || 
       urlLower.includes('demo-pa-split-level.png') || 
       urlLower.includes('demo-pa-two-story.png')
     ) {
-      setDetectedZones(['qz-main', 'qz-trim', 'qz-garage', 'qz-gable']);
+      setDetectedZones(['qz-main', 'qz-trim', 'qz-garage', 'qz-gable', 'rz-gutters']);
       return;
     }
 
@@ -296,15 +296,25 @@ const App: React.FC = () => {
           if (names.some((n) => n.includes('trim') || n.includes('corner'))) zonesList.push('qz-trim');
         }
 
+        if (roofRes.ok) {
+          const roofData = await roofRes.json();
+          const names = [
+            ...(roofData.sections || []).map((s: any) => s.name.toLowerCase()),
+            ...(roofData.optionalSections || []).map((s: any) => s.name.toLowerCase()),
+          ];
+
+          if (names.some((n) => n.includes('gutter'))) zonesList.push('rz-gutters');
+        }
+
         // Apply detected list if we got valid responses, otherwise fallback to show all
         if (zonesList.length > 1) {
           setDetectedZones(zonesList);
         } else {
-          setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+          setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage', 'rz-gutters']);
         }
       } catch (err) {
         console.error('Section detection failed:', err);
-        setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+        setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage', 'rz-gutters']);
       } finally {
         setIsDetecting(false);
       }
@@ -342,7 +352,7 @@ const App: React.FC = () => {
     setShowEnhancePrompt(false);
     setQuickZones(DEFAULT_QUICK_ZONES);
     setQuickRoofZones(DEFAULT_QUICK_ROOF_ZONES);
-    setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage']);
+    setDetectedZones(['qz-main', 'qz-gable', 'qz-dormer', 'qz-shutters', 'qz-trim', 'qz-garage', 'rz-gutters']);
     setImageOptimizeInfo(null);
     zoomPan.resetView();
   };
@@ -375,7 +385,7 @@ const App: React.FC = () => {
         if (hasRoofChanges) {
           setRenderPhase('roof');
           const roofZonesPayload = quickRoofZones
-            .filter(z => z.enabled || z.id === 'rz-main')
+            .filter(z => (z.enabled || z.id === 'rz-main') && detectedZones.includes(z.id))
             .map(z => ({
               name: z.name,
               productName: z.selectedLine.line,
@@ -534,6 +544,7 @@ const App: React.FC = () => {
                         setExpandedRoofZoneId={setExpandedRoofZoneId}
                         onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(c.swatchImage || null); setSwatchPreviewTextureStyle(quickRoofZones[0]?.selectedLine.textureStyle || null); }}
                         onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); setSwatchPreviewTextureStyle(null); }}
+                        detectedZones={detectedZones}
                       />
                     </div>
                   )}
