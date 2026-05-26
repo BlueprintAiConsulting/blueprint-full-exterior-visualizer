@@ -153,10 +153,10 @@ type TextureStyleKey = 'horizontal-lap' | 'dutch-lap' | 'board-batten' | 'shake'
 interface QuickZoneData { name: string; lineName: string; colorName: string; colorHex: string; hue: string; style?: 'horizontal' | 'vertical'; textureStyle?: TextureStyleKey; }
 
 const TEXTURE_PROFILE_DESCRIPTIONS: Record<TextureStyleKey, string> = {
-  'horizontal-lap':  'traditional horizontal lap clapboard siding — planks run parallel to ground with a slight bottom reveal on each course',
-  'dutch-lap':       'Dutch lap (dutchlap) horizontal siding — each plank has a distinctive concave scoop routed at the top edge creating a shadow line',
-  'board-batten':    'vertical board-and-batten siding — wide vertical boards separated by narrow battens running continuously from foundation to eave',
-  'shake':           'staggered cedar perfection shingle siding — squared-edge cedar shingles in overlapping horizontal rows with visible individual shingle units',
+  'horizontal-lap':  'traditional horizontal lap clapboard siding. Planks must run perfectly parallel to the ground with a slight physical overlap. Each course should have a subtle bottom drop-shadow to give a sense of depth, thickness, and realistic material overlap, strictly following the wall perspective lines.',
+  'dutch-lap':       'Dutch lap (dutchlap) horizontal siding. Render each plank with a distinctive concave scoop/curve routed at the top edge. This scoop must create a strong, clean horizontal shadow line immediately beneath each course, casting a realistic drop shadow that highlights the material\'s architectural relief.',
+  'board-batten':    'vertical board-and-batten siding. Render wide vertical planks running continuously from the foundation/base to the roofline/eave. Planks must be separated by narrow, raised battens that project outwards slightly. The battens must cast subtle, crisp vertical shadows matching the main sunlight direction, giving a 3D textured appearance rather than a flat striped pattern.',
+  'shake':           'staggered cedar shingle (shake) siding. Render overlapping rows of rustic, individually-cut wooden shingles with varied widths. The shingles must have visible vertical seams and slightly uneven bottom edges, casting individual, staggered shadow lines below each course. Individual shingle units must show soft woodgrain texture with natural, realistic imperfections.',
 };
 
 app.post('/api/quick-render', generationLimiter, async (req, res) => {
@@ -190,8 +190,9 @@ app.post('/api/quick-render', generationLimiter, async (req, res) => {
 2. NEGATIVE CONSTRAINTS: DO NOT add, remove, or modify ${exclusions.join(', ')}. Leave them 100% untouched.
 3. RENOVATION SURFACES: If the house exterior contains brick, stone, masonry, stucco, or EIFS/synthetic stucco walls, treat them as viable siding surfaces for this renovation visualization — apply the selected siding product naturally over those wall areas as if new siding is being installed. Only preserve these materials on decorative accents, chimneys, or foundation bases that are clearly not part of the main wall cladding.
 4. SCALE: The siding board width must accurately match the scale of the house in the photograph.${hasVerticalZones ? '\n5. VERTICAL SIDING: For zones marked [VERTICAL STYLE], render siding as distinct vertical boards (and narrow battens if Board & Batten style) running from top to bottom of each wall section. Do NOT render horizontal laps on these zones.' : ''}
-5. LIGHTING: Keep the exact same sunlight, shadows, and lighting direction as the original photo.
-6. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
+5. TEXTURAL INTEGRITY: The siding textures must have high resolution and clear tactile detail. Ensure each seam, lap, shingle, or batten has realistic micro-shadows that react naturally to the ambient light, preventing the texture from appearing flat or painted-on.
+6. LIGHTING: Keep the exact same sunlight, shadows, and lighting direction as the original photo.
+7. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
 
     const response = await withTimeout(getAI().models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
