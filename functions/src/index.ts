@@ -867,6 +867,13 @@ Return ONLY valid JSON - no markdown, no code fences, matching this schema:
 });
 
 // POST /api/roof-quick-render
+const ROOF_PRODUCT_DESCRIPTIONS: Record<string, string> = {
+  'patriot': 'CertainTeed Patriot XL (builder-grade architectural strip shingles with oversized 42-inch tabs creating a distinct, clean 3D dimensional profile and crisp granule texture).',
+  'landmark pro': 'CertainTeed Landmark Pro (premium heavyweight laminate shingles with maximum high-definition dimensional depth. The tab shadow lines must be extra-deep and pronounced, creating high-contrast architectural relief, using a vibrant, rich blend of contrasting granules to maximize wood-shake dimension).',
+  'landmark': 'CertainTeed Landmark (classic dual-layer laminate architectural shingles displaying a heavy, random dimensional wood-shake profile with clear overlapping shadow lines between tabs and courses, with dense, realistic asphalt granules).',
+  'metal': 'standing seam metal panels (continuous vertical metal panels with raised seams spaced evenly, displaying a subtle metallic sheen, soft directional light reflections, and crisp vertical seam shadows).',
+};
+
 app.post('/api/roof-quick-render', generationLimiter, async (req, res) => {
   const { imageBase64, mimeType, zones } = req.body as {
     imageBase64: string; mimeType: string;
@@ -877,14 +884,22 @@ app.post('/api/roof-quick-render', generationLimiter, async (req, res) => {
     validateImagePayload(imageBase64, mimeType);
     let prompt = `You are a strict, precise roofing material-replacement engine. Replace ONLY the roof shingles and specified accent zones on this residential home.\n\nApply ONLY these changes:\n`;
     zones.forEach(z => {
-      prompt += `• ${z.name}: ${z.productName} "${z.colorName}" — ${z.hue} (hex ref: ${z.colorHex}) [${z.materialType}]\n`;
+      const prodKey = z.productName.toLowerCase();
+      let prodDesc = '';
+      if (prodKey.includes('patriot')) prodDesc = ROOF_PRODUCT_DESCRIPTIONS['patriot'];
+      else if (prodKey.includes('landmark pro')) prodDesc = ROOF_PRODUCT_DESCRIPTIONS['landmark pro'];
+      else if (prodKey.includes('landmark')) prodDesc = ROOF_PRODUCT_DESCRIPTIONS['landmark'];
+      else if (prodKey.includes('metal') || prodKey.includes('standing seam')) prodDesc = ROOF_PRODUCT_DESCRIPTIONS['metal'];
+
+      const detail = prodDesc ? ` [PRODUCT PROFILE: ${prodDesc}]` : '';
+      prompt += `• ${z.name}: ${z.productName} "${z.colorName}" — ${z.hue} (hex ref: ${z.colorHex}) [${z.materialType}]${detail}\n`;
     });
     prompt += `\nCRITICAL RULES:
-1. PRESERVATION: You MUST strictly map the new roofing materials to the existing roof geometry. DO NOT alter the roof pitch, camera perspective, structural layout, or aspect ratio.
-2. NEGATIVE CONSTRAINTS: DO NOT add, remove, or modify siding, windows, doors, landscaping, sky, foundation, driveways. Leave them 100% untouched.
+1. PRESERVATION: You MUST strictly map the new roofing materials to the existing roof geometry. DO NOT alter the roof pitch, ridge lines, hips, valleys, camera perspective, structural layout, or aspect ratio.
+2. NEGATIVE CONSTRAINTS: DO NOT add, remove, or modify siding, windows, doors, trim, landscaping, sky, foundation, driveways. Leave them 100% untouched.
 3. ROOF-ONLY: Apply shingle changes ONLY to visible roof surfaces. Gutter changes apply ONLY to gutter/fascia areas along eaves and rakes.
-4. TEXTURE: Each shingle must show realistic granule texture and shadow lines between courses appropriate to the material type specified.
-5. LIGHTING: Keep the exact same sunlight direction, shadows, and lighting as the original photo.
+4. TEXTURAL INTEGRITY & GRANULES: Roof shingles must show high-resolution, tactile asphalt granule texture. Ensure there are visible, realistic shadow lines under each shingle course to give thickness and dimension, preventing the shingles from looking like a flat pattern or colored overlay.
+5. LIGHTING: Keep the exact same sunlight direction, shadows, and lighting direction as the original photo.
 6. PHOTOREALISM: The result must look like a premium architectural photograph. No AI artifacts, melting edges, or blurriness.`;
 
     const response = await withTimeout(getAI().models.generateContent({
