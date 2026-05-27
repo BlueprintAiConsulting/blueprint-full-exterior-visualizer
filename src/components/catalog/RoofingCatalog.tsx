@@ -29,8 +29,8 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
 
   return (
     <div className="bg-[#111827] p-4 space-y-3">
-      {/* 3-column tier picker */}
-      <div className="grid grid-cols-3 gap-1.5 bg-[#060B18] p-1 rounded-lg">
+      {/* 4-column tier picker */}
+      <div className="grid grid-cols-4 gap-1 bg-[#060B18] p-1 rounded-lg">
         {ROOFING_OPTIONS.map((line) => {
           const isSelected = mainZone.selectedLine.tier === line.tier;
           return (
@@ -45,7 +45,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
                   )
                 )
               }
-              className={`py-2.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all duration-150 ${
+              className={`py-2 px-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-150 ${
                 isSelected
                   ? 'bg-[#1E3A8A] text-[#60A5FA] shadow-md shadow-blue-500/10'
                   : 'text-[#64748B] hover:text-[#94A3B8] hover:bg-[#111827]'
