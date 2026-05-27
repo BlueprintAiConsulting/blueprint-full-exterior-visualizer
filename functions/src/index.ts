@@ -188,7 +188,7 @@ app.post('/api/quick-render', generationLimiter, async (req, res) => {
     prompt += `\nCRITICAL RULES:
 1. PRESERVATION: You MUST strictly map the new siding to the existing house geometry. DO NOT alter the structural layout, camera perspective, or aspect ratio.
 2. NEGATIVE CONSTRAINTS: DO NOT add, remove, or modify ${exclusions.join(', ')}. Leave them 100% untouched.
-3. RENOVATION SURFACES: If the house exterior contains brick, stone, masonry, stucco, or EIFS/synthetic stucco walls, treat them as viable siding surfaces for this renovation visualization — apply the selected siding product naturally over those wall areas as if new siding is being installed. Only preserve these materials on decorative accents, chimneys, or foundation bases that are clearly not part of the main wall cladding.
+3. DECORATIVE BRICK & STONE PRESERVATION: You MUST strictly preserve all decorative stone, brick wainscoting, brick veneer, stone facades, stone columns, masonry accents, and chimneys. DO NOT lay siding over these decorative elements. Leave them 100% untouched. Only apply siding to areas that are currently siding (lap, board-and-batten, shake, panels) or plain stucco/plaster walls.
 4. SCALE: The siding board width must accurately match the scale of the house in the photograph.${hasVerticalZones ? '\n5. VERTICAL SIDING: For zones marked [VERTICAL STYLE], render siding as distinct vertical boards (and narrow battens if Board & Batten style) running from top to bottom of each wall section. Do NOT render horizontal laps on these zones.' : ''}
 5. TEXTURAL INTEGRITY: The siding textures must have high resolution and clear tactile detail. Ensure each seam, lap, shingle, or batten has realistic micro-shadows that react naturally to the ambient light, preventing the texture from appearing flat or painted-on.
 6. LIGHTING: Keep the exact same sunlight, shadows, and lighting direction as the original photo.
@@ -302,12 +302,12 @@ app.post('/api/detect-sections', async (req, res) => {
 
 SECTION IDENTIFICATION RULES:
 - Identify ALL colorable SIDING exterior zones:
-  * SIDING surfaces: horizontal lap siding, vertical board siding, vinyl panels, fiber cement, wood clapboard, composite siding, AND any brick, stone, masonry, or stucco walls (common renovation targets).
+  * SIDING surfaces: horizontal lap siding, vertical board siding, vinyl panels, fiber cement, wood clapboard, composite siding, AND any brick, stone, masonry, or stucco walls that represent the primary wall cladding (common renovation targets). DO NOT include decorative brick/stone accents, stone wainscoting, stone facades, or stone columns.
   * GARAGE DOOR: if present and colorable, include as its own zone.
 - OPTIONAL ACCENT ZONES (return separately in "optionalSections"):
   * TRIM & ACCENTS: trim boards, corner boards, window trim, door trim, frieze boards — group all matching trim as one zone.
   * SHUTTERS: decorative or functional shutters — group all matching shutters on the house as one unified zone.
-- NEVER include: roof shingles/tiles, skylights, window glass panes, door glass, front door, entry door, side doors, gutters and downspouts, soffit, fascia, chimneys, foundation/concrete base, driveway, landscaping, sky, people, or vehicles.
+- NEVER include: roof shingles/tiles, skylights, window glass panes, door glass, front door, entry door, side doors, gutters and downspouts, soffit, fascia, chimneys, foundation/concrete base, driveway, landscaping, sky, people, vehicles, or decorative stone/brick accents (wainscoting, columns, stone facades, entryway surrounds).
 - Each zone must be architecturally DISTINCT: on a different plane, separated by a physical break, or clearly a different element type.
 - Return ALL distinct zones you identify — there is no maximum. If one continuous siding surface exists, return only 1.
 - Order sections by prominence (largest/most visible siding first).
