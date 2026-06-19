@@ -610,7 +610,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
 <div style="max-width:620px;margin:24px auto">
   <div style="background:#0F172A;padding:24px 28px;border-radius:12px 12px 0 0">
     <div style="color:#60A5FA;font-size:18px;font-weight:bold;letter-spacing:2px">BLUEPRINTENVISION</div>
-    <div style="color:#94A3B8;font-size:13px;margin-top:4px">New Lead — Shiloh Exteriors</div>
+    <div style="color:#94A3B8;font-size:13px;margin-top:4px">New Lead — BlueprintEnvision</div>
   </div>
   <div style="background:white;padding:28px;border-left:1px solid #E2E8F0;border-right:1px solid #E2E8F0">
     <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:14px;margin-bottom:22px">
@@ -647,22 +647,22 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:580px;margin:24px auto">
   <div style="background:#0F172A;padding:24px 28px;border-radius:12px 12px 0 0">
-    <div style="color:#60A5FA;font-size:18px;font-weight:bold;letter-spacing:2px">SHILOH EXTERIORS</div>
+    <div style="color:#60A5FA;font-size:18px;font-weight:bold;letter-spacing:2px">BLUEPRINTENVISION</div>
     <div style="color:#94A3B8;font-size:13px;margin-top:4px">Powered by BlueprintEnvision</div>
   </div>
   <div style="background:white;padding:28px;border-left:1px solid #E2E8F0;border-right:1px solid #E2E8F0">
     <h2 style="color:#1E293B;margin:0 0 16px">Hi ${name}, we received your request! 👋</h2>
-    <p style="color:#475569;line-height:1.6">Thank you for using BlueprintEnvision to design your home exterior. Your quote request has been received by the Shiloh Exteriors team and one of our specialists will reach out within <strong>24 business hours</strong>.</p>
+    <p style="color:#475569;line-height:1.6">Thank you for using BlueprintEnvision to design your home exterior. Your quote request has been received by the BlueprintEnvision team and one of our specialists will reach out within <strong>24 business hours</strong>.</p>
     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;margin:20px 0">
       <h3 style="margin:0 0 10px;color:#1E293B;font-size:13px;text-transform:uppercase;letter-spacing:1px">Your Selected Design</h3>
       <table style="width:100%;border-collapse:collapse">${buildDesignHtml(designSpec)}</table>
     </div>
-    <p style="color:#64748B;font-size:13px">We have attached your customized <strong>CertainTeed Design Spec Sheet</strong> PDF to this email for your records.</p>
-    <p style="color:#64748B;font-size:13px">Questions? You can reach us directly at <a href="mailto:office@shilohroofing.com" style="color:#3B82F6">office@shilohroofing.com</a></p>
+    <p style="color:#64748B;font-size:13px">We have attached your customized <strong>Design Spec Sheet</strong> PDF to this email for your records.</p>
+    <p style="color:#64748B;font-size:13px">Questions? You can reach us directly at <a href="mailto:drewhufnagle@gmail.com" style="color:#3B82F6">drewhufnagle@gmail.com</a></p>
   </div>
   <div style="background:#0F172A;padding:14px 28px;border-radius:0 0 12px 12px;text-align:center;color:#475569;font-size:11px">
-    <p style="margin:0">Shiloh Exteriors &nbsp;·&nbsp; Powered by BlueprintEnvision</p>
-    <p style="margin:6px 0 0;font-size:10px;color:#64748B">Blueprint AI Consulting Co. · Pennsylvania, USA</p>
+    <p style="margin:0">BlueprintEnvision</p>
+    <p style="margin:6px 0 0;font-size:10px;color:#64748B">Blueprint Ai Consulting Co. · Pennsylvania, USA</p>
     <p style="margin:4px 0 0;font-size:9px;color:#64748B">This is a one-time transactional email in response to your quote request. You will not receive marketing emails from this service.</p>
   </div>
 </div>
@@ -673,10 +673,10 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
 
   const transport = getGmailTransport();
   if (transport) {
-    const FROM = `"Shiloh Roofing Visualizer" <${process.env.GMAIL_USER}>`;
+    const FROM = `"BlueprintEnvision" <${process.env.GMAIL_USER}>`;
     const leadRecipients = process.env.LEAD_EMAIL
       ? process.env.LEAD_EMAIL.split(',')
-      : ['office@shilohroofing.com', 'fauthmike@gmail.com'];
+      : ['drewhufnagle@gmail.com'];
 
     // Generate the spec PDF sheet
     let pdfBuffer: Buffer | null = null;
@@ -719,7 +719,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
     transport.sendMail({
       from: FROM,
       to: email,
-      subject: `Your Shiloh Roofing Visualization Spec Sheet — We'll Be In Touch, ${name}!`,
+      subject: `Your BlueprintEnvision Design Spec Sheet — We'll Be In Touch, ${name}!`,
       html: confirmEmailHtml,
       attachments,
     }).then(() => console.log(`[quote-request] Confirmation email sent to ${email}`))
