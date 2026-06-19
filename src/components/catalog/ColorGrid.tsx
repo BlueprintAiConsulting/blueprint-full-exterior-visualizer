@@ -51,10 +51,16 @@ const ColorGrid: React.FC<ColorGridProps> = ({
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#060B18] border border-[#1E293B]">
           <div
             className="w-8 h-8 rounded-md shrink-0 border border-white/10 overflow-hidden relative"
-            style={{ backgroundColor: selectedColor.hex }}
+            style={{ 
+              backgroundColor: selectedColor.hex,
+              backgroundImage: ('swatchImage' in selectedColor && selectedColor.swatchImage) 
+                ? `url(${import.meta.env.BASE_URL}${(selectedColor.swatchImage as string).replace(/^\//, '')})` 
+                : undefined,
+              backgroundSize: 'cover',
+            }}
           >
             {/* Texture overlay on preview swatch */}
-            {textureBg && (
+            {textureBg && !('swatchImage' in selectedColor && selectedColor.swatchImage) && (
               <div
                 className="absolute inset-0 rounded-md"
                 style={{
@@ -81,6 +87,10 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {visibleColors.map((color) => {
           const isSelected = color.id === selectedColorId;
+          const hasSwatchImage = 'swatchImage' in color && !!color.swatchImage;
+          const swatchImageUrl = hasSwatchImage 
+            ? `url(${import.meta.env.BASE_URL}${(color as any).swatchImage.replace(/^\//, '')})`
+            : undefined;
 
           return (
             <button
@@ -96,13 +106,15 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                 className="w-full aspect-square rounded-lg relative overflow-hidden transition-all duration-150"
                 style={{
                   backgroundColor: color.hex,
+                  backgroundImage: swatchImageUrl,
+                  backgroundSize: swatchImageUrl ? 'cover' : undefined,
                   boxShadow: isSelected
                     ? `0 0 0 2px #060B18, 0 0 0 4px ${ringColor}`
                     : '0 0 0 1px rgba(255,255,255,0.06)',
                 }}
               >
                 {/* Material texture overlay (multiply blends with the hex color) */}
-                {textureBg && (
+                {textureBg && !hasSwatchImage && (
                   <div
                     className="absolute inset-0"
                     style={{
