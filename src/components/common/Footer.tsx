@@ -19,7 +19,7 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
               <h2 className="font-bold text-xs tracking-widest text-[#64748B]">BLUEPRINT<span className="text-[#60A5FA]/60">ENVISION</span></h2>
             </div>
             <p className="text-[11px] text-[#64748B] leading-relaxed max-w-xs mb-4">
-              AI-powered exterior visualization. Preview roofing, siding, gutters, and accents on your home using real product colors.
+              AI-powered exterior visualization by Wheeler Contracting LLC. Preview roofing, siding, gutters, and accents on your home using real product colors.
             </p>
           </div>
 

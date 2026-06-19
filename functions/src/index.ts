@@ -658,7 +658,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
       <table style="width:100%;border-collapse:collapse">${buildDesignHtml(designSpec)}</table>
     </div>
     <p style="color:#64748B;font-size:13px">We have attached your customized <strong>Design Spec Sheet</strong> PDF to this email for your records.</p>
-    <p style="color:#64748B;font-size:13px">Questions? You can reach us directly at <a href="mailto:drewhufnagle@gmail.com" style="color:#3B82F6">drewhufnagle@gmail.com</a></p>
+    <p style="color:#64748B;font-size:13px">Questions? You can reach us directly at <a href="mailto:coachdrew@blueprintaiconsultingco.com" style="color:#3B82F6">coachdrew@blueprintaiconsultingco.com</a></p>
   </div>
   <div style="background:#0F172A;padding:14px 28px;border-radius:0 0 12px 12px;text-align:center;color:#475569;font-size:11px">
     <p style="margin:0">BlueprintEnvision</p>
@@ -676,7 +676,7 @@ app.post('/api/quote-request', standardLimiter, async (req, res) => {
     const FROM = `"BlueprintEnvision" <${process.env.GMAIL_USER}>`;
     const leadRecipients = process.env.LEAD_EMAIL
       ? process.env.LEAD_EMAIL.split(',')
-      : ['drewhufnagle@gmail.com'];
+      : ['drewhufnagle@gmail.com', 'wheelercontractinginc@gmail.com'];
 
     // Generate the spec PDF sheet
     let pdfBuffer: Buffer | null = null;

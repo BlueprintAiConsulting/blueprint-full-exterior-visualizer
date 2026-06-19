@@ -23,7 +23,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('[ExteriorVision] Uncaught render error:', error, info.componentStack);
+    console.error('[BlueprintEnvision] Uncaught render error:', error, info.componentStack);
   }
 
   render() {

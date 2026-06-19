@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({
             </h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[8px] uppercase tracking-[0.18em] font-semibold whitespace-nowrap" style={{background: 'linear-gradient(90deg, #60A5FA, #93C5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-                Built by Blueprint Ai Consulting Co
+                For Wheeler Contracting LLC · Powered by Blueprint AI
               </span>
               <img src={`${base}blueprint-ai-logo.jpg`} alt="Blueprint AI Consulting Co" className="w-3.5 h-3.5 rounded-sm object-cover" />
             </div>
