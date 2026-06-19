@@ -7,7 +7,7 @@ export default defineConfig(({ command }) => {
   const isProd = command === 'build';
 
   return {
-    base: '/',
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
