@@ -30,9 +30,12 @@ const Header: React.FC<HeaderProps> = ({
             <h1 className="font-bold text-[15px] leading-none tracking-tight text-white whitespace-nowrap">
               BLUEPRINT<span className="text-[#60A5FA]">ENVISION</span>
             </h1>
-            <span className="text-[8px] uppercase tracking-[0.18em] font-semibold whitespace-nowrap mt-0.5" style={{background: 'linear-gradient(90deg, #60A5FA, #93C5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-              Built by Blueprint Ai Consulting Co
-            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[8px] uppercase tracking-[0.18em] font-semibold whitespace-nowrap" style={{background: 'linear-gradient(90deg, #60A5FA, #93C5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+                Built by Blueprint Ai Consulting Co
+              </span>
+              <img src={`${base}blueprint-ai-logo.jpg`} alt="Blueprint AI Consulting Co" className="w-3.5 h-3.5 rounded-sm object-cover" />
+            </div>
           </div>
         </div>
 

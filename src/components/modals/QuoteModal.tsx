@@ -157,7 +157,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
                     Contact us to upgrade and start receiving leads directly to your inbox.
                   </p>
                   <a
-                    href="mailto:drewhufnagle@gmail.com?subject=BlueprintEnvision%20Upgrade%20Inquiry"
+                    href="mailto:coachdrew@blueprintaiconsultingco.com?subject=BlueprintEnvision%20Upgrade%20Inquiry"
                     className="mt-6 px-5 py-2.5 rounded-lg bg-[#1E3A8A] hover:bg-[#1D4ED8] text-[#60A5FA] text-xs font-bold uppercase tracking-widest transition-colors"
                   >
                     Contact Us to Upgrade

@@ -58,7 +58,10 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
         {/* Bottom bar */}
         <div className="border-t border-[#1E293B] mt-6 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-3 text-[9px] font-bold uppercase tracking-widest text-[#475569]">
-            <p>© {new Date().getFullYear()} Blueprint Ai Consulting Co</p>
+            <div className="flex items-center gap-2">
+              <img src={`${base}blueprint-ai-logo.jpg`} alt="Blueprint AI Consulting Co" className="w-4 h-4 rounded-sm object-cover grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
+              <p>© {new Date().getFullYear()} Blueprint Ai Consulting Co</p>
+            </div>
             <div className="flex gap-4">
               <span>v2.5</span>
             </div>

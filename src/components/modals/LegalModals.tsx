@@ -143,7 +143,7 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">5. Your Rights</h4>
-                <p>You may request access to, correction of, or deletion of your personal information at any time by contacting us at <a href="mailto:drewhufnagle@gmail.com" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">drewhufnagle@gmail.com</a>. We will respond to data requests within 30 days.</p>
+                <p>You may request access to, correction of, or deletion of your personal information at any time by contacting us at <a href="mailto:coachdrew@blueprintaiconsultingco.com" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">coachdrew@blueprintaiconsultingco.com</a>. We will respond to data requests within 30 days.</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">6. Cookies & Tracking</h4>
@@ -155,7 +155,7 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">8. Contact</h4>
-                <p>For privacy-related inquiries, contact us at <a href="mailto:drewhufnagle@gmail.com" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">drewhufnagle@gmail.com</a>.</p>
+                <p>For privacy-related inquiries, contact us at <a href="mailto:coachdrew@blueprintaiconsultingco.com" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">coachdrew@blueprintaiconsultingco.com</a>.</p>
               </section>
             </div>
             <div className="p-4 border-t border-[#1E293B] shrink-0">
