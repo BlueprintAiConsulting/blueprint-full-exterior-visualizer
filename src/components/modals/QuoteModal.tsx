@@ -239,7 +239,19 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
                           <span className="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">Selected Siding</span>
                         </div>
                         <div className="flex items-center gap-3 px-4 py-3">
-                          <div className="w-14 h-10 rounded-lg border border-white/10 shrink-0" style={{ backgroundColor: mainSiding.selectedColor.hex }} />
+                          <div className="w-14 h-10 rounded-lg border border-white/10 overflow-hidden relative shrink-0" style={{ backgroundColor: mainSiding.selectedColor.hex }}>
+                            {mainSiding.selectedLine.textureImage && (
+                              <div
+                                className="absolute inset-0"
+                                style={{
+                                  backgroundImage: `url(${import.meta.env.BASE_URL}${mainSiding.selectedLine.textureImage.replace(/^\//, '')})`,
+                                  backgroundSize: 'cover',
+                                  mixBlendMode: 'multiply',
+                                  opacity: 0.58,
+                                }}
+                              />
+                            )}
+                          </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-bold text-[#E2E8F0] leading-tight">{mainSiding.selectedColor.name}</p>
                             <p className="text-[9px] text-[#64748B] mt-0.5">{mainSiding.selectedLine.line} · {mainSiding.selectedColor.hex.toUpperCase()}</p>

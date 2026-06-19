@@ -28,10 +28,10 @@ const Header: React.FC<HeaderProps> = ({
           />
           <div className="flex flex-col min-w-0">
             <h1 className="font-bold text-[15px] leading-none tracking-tight text-white whitespace-nowrap">
-              EXTERIOR<span className="text-[#60A5FA]">VISION</span>
+              BLUEPRINT<span className="text-[#60A5FA]">ENVISION</span>
             </h1>
             <span className="text-[8px] uppercase tracking-[0.18em] font-semibold whitespace-nowrap mt-0.5" style={{background: 'linear-gradient(90deg, #60A5FA, #93C5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-              Full Home Exterior Visualizer
+              Built by Blueprint Ai Consulting Co
             </span>
           </div>
         </div>
