@@ -28,7 +28,7 @@ export const TermsOfUseModal: React.FC<LegalModalProps> = ({ isOpen, onClose }) 
             <div className="p-5 border-b border-[#1E293B] flex justify-between items-center shrink-0">
               <div>
                 <h3 className="text-base font-bold text-white">Terms of Use</h3>
-                <p className="text-[10px] text-[#64748B] mt-0.5">ExteriorVision — Effective January 2026</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5">BlueprintEnvision — Effective January 2026</p>
               </div>
               <button onClick={onClose} className="text-[#94A3B8] hover:text-white transition-colors">
                 <X className="w-5 h-5" />
@@ -37,7 +37,7 @@ export const TermsOfUseModal: React.FC<LegalModalProps> = ({ isOpen, onClose }) 
             <div className="p-5 overflow-y-auto space-y-4 text-[11px] text-[#94A3B8] leading-relaxed">
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">1. Permitted Use</h4>
-                <p>This tool is provided solely for personal, non-commercial home improvement visualization purposes. You may not copy, reproduce, resell, or distribute outputs for commercial gain without written permission from ExteriorVision</p>
+                <p>This tool is provided solely for personal, non-commercial home improvement visualization purposes. You may not copy, reproduce, resell, or distribute outputs for commercial gain without written permission from BlueprintEnvision</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">2. No Warranty</h4>
@@ -46,11 +46,11 @@ export const TermsOfUseModal: React.FC<LegalModalProps> = ({ isOpen, onClose }) 
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">3. Trademarks</h4>
                 <p>All product names, logos, and brands referenced in this tool are the property of their respective owners.</p>
-                <p className="mt-1.5">This tool is independently operated by ExteriorVision and is <strong className="text-[#E2E8F0]">not affiliated with, sponsored by, or endorsed by</strong> any manufacturer whose products may be referenced.</p>
+                <p className="mt-1.5">This tool is independently operated by BlueprintEnvision and is <strong className="text-[#E2E8F0]">not affiliated with, sponsored by, or endorsed by</strong> any manufacturer whose products may be referenced.</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">4. Image & Privacy</h4>
-                <p>By uploading images, you confirm you own or have the right to use them for this purpose. Uploaded images are transmitted to Google LLC's Gemini AI service for processing. They are not stored, retained, or shared by ExteriorVision or the providing contractor beyond the active session. See our <strong className="text-[#60A5FA]">Privacy Policy</strong> for full details.</p>
+                <p>By uploading images, you confirm you own or have the right to use them for this purpose. Uploaded images are transmitted to Google LLC's Gemini AI service for processing. They are not stored, retained, or shared by BlueprintEnvision or the providing contractor beyond the active session. See our <strong className="text-[#60A5FA]">Privacy Policy</strong> for full details.</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">5. Age Requirement</h4>
@@ -58,11 +58,11 @@ export const TermsOfUseModal: React.FC<LegalModalProps> = ({ isOpen, onClose }) 
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">6. Limitation of Liability</h4>
-                <p>To the maximum extent permitted by law, ExteriorVision and the providing contractor shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from your use of this tool or reliance on any visualization output, including but not limited to errors in color representation, material selection, or project estimation.</p>
+                <p>To the maximum extent permitted by law, BlueprintEnvision and the providing contractor shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from your use of this tool or reliance on any visualization output, including but not limited to errors in color representation, material selection, or project estimation.</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">7. Indemnification</h4>
-                <p>You agree to indemnify and hold harmless ExteriorVision and any affiliated contractors from any claims, damages, or expenses arising from your use of this tool or any decisions made based on its output.</p>
+                <p>You agree to indemnify and hold harmless BlueprintEnvision and any affiliated contractors from any claims, damages, or expenses arising from your use of this tool or any decisions made based on its output.</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">8. Governing Law</h4>
@@ -109,7 +109,7 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
             <div className="p-5 border-b border-[#1E293B] shrink-0 flex justify-between items-center bg-[#0F172A]">
               <div>
                 <h3 className="text-base font-bold text-white">Privacy Policy</h3>
-                <p className="text-[10px] text-[#64748B] mt-0.5">ExteriorVision — Effective January 2026</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5">BlueprintEnvision — Effective January 2026</p>
               </div>
               <button onClick={onClose} className="text-[#475569] hover:text-white transition-colors">
                 <X className="w-5 h-5" />
@@ -143,7 +143,7 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">5. Your Rights</h4>
-                <p>You may request access to, correction of, or deletion of your personal information at any time by contacting us at <a href="mailto:support@exteriorvision.app" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">support@exteriorvision.app</a>. We will respond to data requests within 30 days.</p>
+                <p>You may request access to, correction of, or deletion of your personal information at any time by contacting us at <a href="mailto:drewhufnagle@gmail.com" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">drewhufnagle@gmail.com</a>. We will respond to data requests within 30 days.</p>
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">6. Cookies & Tracking</h4>
@@ -155,7 +155,7 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
               </section>
               <section>
                 <h4 className="text-xs font-bold text-[#E2E8F0] uppercase tracking-wider mb-1">8. Contact</h4>
-                <p>For privacy-related inquiries, contact us at <a href="mailto:support@exteriorvision.app" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">support@exteriorvision.app</a>.</p>
+                <p>For privacy-related inquiries, contact us at <a href="mailto:drewhufnagle@gmail.com" className="text-[#60A5FA] hover:text-[#93C5FD] underline underline-offset-2">drewhufnagle@gmail.com</a>.</p>
               </section>
             </div>
             <div className="p-4 border-t border-[#1E293B] shrink-0">

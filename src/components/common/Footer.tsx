@@ -15,8 +15,8 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <img src={`${base}logo-mark.png`} alt="ExteriorVision" className="w-7 h-7 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
-              <h2 className="font-bold text-xs tracking-widest text-[#64748B]">EXTERIOR<span className="text-[#60A5FA]/60">VISION</span></h2>
+              <img src={`${base}logo-mark.png`} alt="BlueprintEnvision" className="w-7 h-7 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
+              <h2 className="font-bold text-xs tracking-widest text-[#64748B]">BLUEPRINT<span className="text-[#60A5FA]/60">ENVISION</span></h2>
             </div>
             <p className="text-[11px] text-[#64748B] leading-relaxed max-w-xs mb-4">
               AI-powered exterior visualization. Preview roofing, siding, gutters, and accents on your home using real product colors.
@@ -58,7 +58,7 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
         {/* Bottom bar */}
         <div className="border-t border-[#1E293B] mt-6 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-3 text-[9px] font-bold uppercase tracking-widest text-[#475569]">
-            <p>© {new Date().getFullYear()} ExteriorVision</p>
+            <p>© {new Date().getFullYear()} Blueprint Ai Consulting Co</p>
             <div className="flex gap-4">
               <span>v2.5</span>
             </div>

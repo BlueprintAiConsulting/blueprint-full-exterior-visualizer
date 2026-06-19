@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2.5 min-w-0">
           <img
             src={`${base}logo-mark.png`}
-            alt="ExteriorVision"
+            alt="BlueprintEnvision"
             className="w-9 h-9 object-contain shrink-0 drop-shadow-[0_0_8px_rgba(0,229,255,0.5)]"
           />
           <div className="flex flex-col min-w-0">
