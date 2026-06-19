@@ -12,6 +12,13 @@
           "jz-construction-visualizer"
         ]
       }
+    },
+    "wheeler-brutalist-1998": {
+      "hosting": {
+        "wheeler": [
+          "wheeler-brutalist-1998"
+        ]
+      }
     }
   },
   "etags": {}
