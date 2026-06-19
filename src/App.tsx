@@ -808,11 +808,7 @@ const App: React.FC = () => {
   );
 };
 
-// Wrap the app with the access gate
-const ProtectedApp: React.FC = () => (
-  <AccessGate>
-    <App />
-  </AccessGate>
-);
+// Wheeler Contracting — no access gate, open access
+const ProtectedApp: React.FC = () => <App />;
 
 export default ProtectedApp;
